@@ -15,6 +15,7 @@ export const sessions = pgTable(
 
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  oauthSub: varchar("oauth_sub").unique(),
   email: text("email").unique(),
   password: text("password"),
   firstName: text("first_name"),
@@ -74,7 +75,7 @@ export const insertUserSchema = z.object({
 });
 
 export const upsertUserSchema = z.object({
-  id: z.string(),
+  oauthSub: z.string(),
   email: z.string().optional().nullable(),
   firstName: z.string().optional().nullable(),
   lastName: z.string().optional().nullable(),
