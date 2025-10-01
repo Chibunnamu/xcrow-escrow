@@ -1,38 +1,89 @@
-import { type User, type InsertUser } from "@shared/schema";
-import { randomUUID } from "crypto";
+import { type User, type InsertUser, type Transaction, type InsertTransaction, users, transactions, type TransactionStatus } from "@shared/schema";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { eq } from "drizzle-orm";
+import { Pool } from "pg";
+import { hashPassword } from "./auth";
 
-// modify the interface with any CRUD methods
-// you might need
-
-export interface IStorage {
-  getUser(id: string): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL must be set");
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User>;
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
-  constructor() {
-    this.users = new Map();
-  }
+const db = drizzle({ client: pool });
 
+export interface IStorage {
+  // User methods
+  getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(user: InsertUser): Promise<User>;
+  
+  // Transaction methods
+  getTransaction(id: string): Promise<Transaction | undefined>;
+  getTransactionByLink(link: string): Promise<Transaction | undefined>;
+  getTransactionsBySeller(sellerId: string): Promise<Transaction[]>;
+  createTransaction(transaction: InsertTransaction): Promise<Transaction>;
+  updateTransactionStatus(id: string, status: TransactionStatus, paystackReference?: string): Promise<Transaction | undefined>;
+}
+
+export class DatabaseStorage implements IStorage {
+  // User methods
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
+    return result[0];
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
+    return result[0];
   }
 
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = randomUUID();
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+    const hashedPassword = await hashPassword(insertUser.password);
+    const result = await db.insert(users).values({
+      ...insertUser,
+      password: hashedPassword,
+    }).returning();
+    return result[0];
+  }
+
+  // Transaction methods
+  async getTransaction(id: string): Promise<Transaction | undefined> {
+    const result = await db.select().from(transactions).where(eq(transactions.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getTransactionByLink(link: string): Promise<Transaction | undefined> {
+    const result = await db.select().from(transactions).where(eq(transactions.uniqueLink, link)).limit(1);
+    return result[0];
+  }
+
+  async getTransactionsBySeller(sellerId: string): Promise<Transaction[]> {
+    return await db.select().from(transactions).where(eq(transactions.sellerId, sellerId));
+  }
+
+  async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
+    const commission = (parseFloat(insertTransaction.price) * 0.05).toFixed(2);
+    const result = await db.insert(transactions).values({
+      ...insertTransaction,
+      commission,
+    }).returning();
+    return result[0];
+  }
+
+  async updateTransactionStatus(id: string, status: TransactionStatus, paystackReference?: string): Promise<Transaction | undefined> {
+    const updateData: any = { status, updatedAt: new Date() };
+    if (paystackReference) {
+      updateData.paystackReference = paystackReference;
+    }
+    const result = await db.update(transactions)
+      .set(updateData)
+      .where(eq(transactions.id, id))
+      .returning();
+    return result[0];
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
