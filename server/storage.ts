@@ -1,6 +1,6 @@
 import { type User, type InsertUser, type Transaction, type InsertTransaction, type Dispute, type InsertDispute, type Payout, type PayoutStatus, users, transactions, disputes, payouts, type TransactionStatus, type DisputeStatus } from "@shared/schema";
 import { drizzle } from "drizzle-orm/node-postgres";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { Pool } from "pg";
 import { hashPassword } from "./auth";
 
@@ -60,7 +60,7 @@ export interface IStorage {
   // Payout methods
   createPayout(transactionId: string, sellerId: string, amount: string): Promise<Payout>;
   updatePayoutStatus(payoutId: string, status: PayoutStatus, transferCode?: string, paystackReference?: string, failureReason?: string): Promise<Payout | undefined>;
-  getPayoutsBySeller(sellerId: string): Promise<Payout[]>;
+  getPayoutsBySeller(sellerId: string): Promise<Array<Payout & { transaction: Transaction }>>;
   getPayoutByTransaction(transactionId: string): Promise<Payout | undefined>;
 }
 
@@ -388,8 +388,21 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
-  async getPayoutsBySeller(sellerId: string): Promise<Payout[]> {
-    return await db.select().from(payouts).where(eq(payouts.sellerId, sellerId));
+  async getPayoutsBySeller(sellerId: string): Promise<Array<Payout & { transaction: Transaction }>> {
+    const result = await db
+      .select({
+        payout: payouts,
+        transaction: transactions,
+      })
+      .from(payouts)
+      .innerJoin(transactions, eq(payouts.transactionId, transactions.id))
+      .where(eq(payouts.sellerId, sellerId))
+      .orderBy(desc(payouts.createdAt));
+    
+    return result.map((row) => ({
+      ...row.payout,
+      transaction: row.transaction,
+    }));
   }
 
   async getPayoutByTransaction(transactionId: string): Promise<Payout | undefined> {
