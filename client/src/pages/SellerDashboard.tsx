@@ -112,7 +112,7 @@ export const SellerDashboard = (): JSX.Element => {
               iconBgColor="bg-blue-100"
               iconColor="text-blue-600"
               title="Escrow Volume"
-              value={`$${stats?.escrowVolume || 0}`}
+              value={`₦${stats?.escrowVolume || 0}`}
               change={stats?.escrowVolumeChange || 0}
               changeLabel="Since Last Month"
             />
