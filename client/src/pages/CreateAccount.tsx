@@ -13,12 +13,12 @@ import {
 } from "@/components/ui/select";
 
 export const CreateAccount = (): JSX.Element => {
-  const formFields = [
+  const formFields: Array<{ id: string; label: string; type: string; placeholder: string; defaultValue?: string }> = [
     { id: "firstName", label: "First Name", type: "text", placeholder: "" },
     { id: "lastName", label: "Last Name", type: "text", placeholder: "" },
   ];
 
-  const fullWidthFields = [
+  const fullWidthFields: Array<{ id: string; label: string; type: string; placeholder: string; defaultValue?: string }> = [
     { id: "email", label: "Email Address", type: "email", placeholder: "" },
     {
       id: "referralCode",
