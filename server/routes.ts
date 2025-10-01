@@ -2,6 +2,7 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { isAuthenticated } from "./auth";
+import { setupReplitAuth } from "./replitAuth";
 import passport from "passport";
 import { insertUserSchema, insertTransactionSchema, updateTransactionStatusSchema, insertDisputeSchema, updateDisputeStatusSchema, updateBankAccountSchema, type User } from "@shared/schema";
 import { randomBytes } from "crypto";
@@ -9,6 +10,8 @@ import { initializePayment, verifyPayment, validatePaystackWebhook } from "./pay
 import { listBanks, verifyAccountNumber, createTransferRecipient, initiateTransfer } from "./transfer";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup Replit OAuth authentication
+  await setupReplitAuth(app);
   // Auth routes
   app.post("/api/signup", async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -87,10 +90,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.get("/api/user", (req: Request, res: Response) => {
+  app.get("/api/user", async (req: Request, res: Response) => {
     if (!req.user) {
       return res.status(401).json({ message: "Not authenticated" });
     }
+
+    const userData = req.user as any;
+    
+    // Check if this is an OAuth user
+    if (userData.claims) {
+      const userId = userData.claims.sub;
+      const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      const { password, ...userWithoutPassword } = user;
+      return res.json({ user: userWithoutPassword });
+    }
+    
+    // Local user
     const { password, ...userWithoutPassword } = req.user as User;
     res.json({ user: userWithoutPassword });
   });
@@ -286,7 +304,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify the authenticated user's email matches the buyer email (case-insensitive)
-      if (existingTransaction.buyerEmail.toLowerCase() !== user.email.toLowerCase()) {
+      if (!user.email || existingTransaction.buyerEmail.toLowerCase() !== user.email.toLowerCase()) {
         return res.status(403).json({ message: "This transaction is intended for a different buyer" });
       }
 
