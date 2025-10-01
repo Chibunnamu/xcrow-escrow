@@ -291,6 +291,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dashboard statistics routes
+  app.get("/api/dashboard/stats", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user as User;
+      const stats = await storage.getDashboardStats(user.id);
+      res.json(stats);
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/dashboard/transactions-over-time", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user as User;
+      const data = await storage.getTransactionsOverTime(user.id);
+      res.json({ data });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/dashboard/recent-activities", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user as User;
+      const limit = parseInt(req.query.limit as string) || 10;
+      const activities = await storage.getRecentActivities(user.id, limit);
+      res.json({ activities });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

@@ -26,6 +26,23 @@ export interface IStorage {
   getTransactionsBySeller(sellerId: string): Promise<Transaction[]>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   updateTransactionStatus(id: string, status: TransactionStatus, paystackReference?: string): Promise<Transaction | undefined>;
+  
+  // Statistics methods
+  getDashboardStats(sellerId: string): Promise<{
+    totalTransactions: number;
+    successRate: number;
+    escrowVolume: number;
+    totalTransactionsChange: number;
+    successRateChange: number;
+    escrowVolumeChange: number;
+  }>;
+  getTransactionsOverTime(sellerId: string): Promise<Array<{ month: string; amount: number }>>;
+  getRecentActivities(sellerId: string, limit: number): Promise<Array<{
+    id: string;
+    activity: string;
+    details: string;
+    time: string;
+  }>>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -127,6 +144,141 @@ export class DatabaseStorage implements IStorage {
       .where(eq(transactions.id, id))
       .returning();
     return result[0];
+  }
+
+  // Statistics methods
+  async getDashboardStats(sellerId: string): Promise<{
+    totalTransactions: number;
+    successRate: number;
+    escrowVolume: number;
+    totalTransactionsChange: number;
+    successRateChange: number;
+    escrowVolumeChange: number;
+  }> {
+    const allTransactions = await this.getTransactionsBySeller(sellerId);
+    const totalTransactions = allTransactions.length;
+    
+    const completedTransactions = allTransactions.filter(t => t.status === "completed");
+    const successRate = totalTransactions > 0 
+      ? (completedTransactions.length / totalTransactions) * 100 
+      : 0;
+    
+    const escrowVolume = allTransactions
+      .filter(t => t.status === "paid" || t.status === "asset_transferred" || t.status === "completed")
+      .reduce((sum, t) => sum + parseFloat(t.price), 0);
+
+    const now = new Date();
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+    
+    const lastMonthTransactions = allTransactions.filter(t => new Date(t.createdAt) < lastMonth);
+    const lastMonthCompleted = lastMonthTransactions.filter(t => t.status === "completed");
+    
+    const lastMonthTotal = lastMonthTransactions.length;
+    const lastMonthSuccessRate = lastMonthTotal > 0 
+      ? (lastMonthCompleted.length / lastMonthTotal) * 100 
+      : 0;
+    
+    const lastMonthVolume = lastMonthTransactions
+      .filter(t => t.status === "paid" || t.status === "asset_transferred" || t.status === "completed")
+      .reduce((sum, t) => sum + parseFloat(t.price), 0);
+
+    return {
+      totalTransactions,
+      successRate: Math.round(successRate),
+      escrowVolume: Math.round(escrowVolume),
+      totalTransactionsChange: lastMonthTotal > 0 
+        ? Math.round(((totalTransactions - lastMonthTotal) / lastMonthTotal) * 100)
+        : totalTransactions > 0 ? 100 : 0,
+      successRateChange: lastMonthSuccessRate > 0
+        ? Math.round(successRate - lastMonthSuccessRate)
+        : 0,
+      escrowVolumeChange: lastMonthVolume > 0
+        ? Math.round(((escrowVolume - lastMonthVolume) / lastMonthVolume) * 100)
+        : escrowVolume > 0 ? 100 : 0,
+    };
+  }
+
+  async getTransactionsOverTime(sellerId: string): Promise<Array<{ month: string; amount: number }>> {
+    const allTransactions = await this.getTransactionsBySeller(sellerId);
+    
+    const monthlyData: Record<string, number> = {};
+    const months = ["January", "February", "March", "April", "May", "June", 
+                   "July", "August", "September", "October", "November", "December"];
+    
+    allTransactions.forEach(transaction => {
+      const date = new Date(transaction.createdAt);
+      const monthName = months[date.getMonth()];
+      const amount = parseFloat(transaction.price);
+      
+      if (!monthlyData[monthName]) {
+        monthlyData[monthName] = 0;
+      }
+      monthlyData[monthName] += amount;
+    });
+
+    return months.map(month => ({
+      month,
+      amount: monthlyData[month] || 0,
+    }));
+  }
+
+  async getRecentActivities(sellerId: string, limit: number = 10): Promise<Array<{
+    id: string;
+    activity: string;
+    details: string;
+    time: string;
+  }>> {
+    const allTransactions = await this.getTransactionsBySeller(sellerId);
+    
+    const activities = allTransactions
+      .sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())
+      .slice(0, limit)
+      .map(transaction => {
+        let activity = "";
+        let details = "";
+        
+        switch (transaction.status) {
+          case "pending":
+            activity = `Transaction #${transaction.id.slice(0, 4)}`;
+            details = "Awaiting buyer confirmation";
+            break;
+          case "paid":
+            activity = `Transaction #${transaction.id.slice(0, 4)}`;
+            details = "Payment received, transfer asset";
+            break;
+          case "asset_transferred":
+            activity = `Transaction #${transaction.id.slice(0, 4)}`;
+            details = "Asset transferred, awaiting buyer confirmation";
+            break;
+          case "completed":
+            activity = `Transaction #${transaction.id.slice(0, 4)}`;
+            details = "Transaction completed successfully";
+            break;
+        }
+        
+        const timeDiff = Date.now() - new Date(transaction.updatedAt).getTime();
+        const minutes = Math.floor(timeDiff / 60000);
+        const hours = Math.floor(timeDiff / 3600000);
+        const days = Math.floor(timeDiff / 86400000);
+        
+        let time = "";
+        if (minutes < 60) {
+          time = `${minutes} mins ago`;
+        } else if (hours < 24) {
+          time = `${hours} hours ago`;
+        } else {
+          time = `${days} days ago`;
+        }
+        
+        return {
+          id: transaction.id,
+          activity,
+          details,
+          time,
+        };
+      });
+    
+    return activities;
   }
 }
 
