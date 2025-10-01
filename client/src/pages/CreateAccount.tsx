@@ -73,7 +73,8 @@ export const CreateAccount = (): JSX.Element => {
   return (
     <div className="w-full min-h-screen flex bg-white">
       <div className="flex w-full max-w-[1440px] mx-auto items-start gap-6 p-6">
-        <div className="relative w-1/2 min-h-[976px] bg-[#493d9e] rounded-lg">
+        {/* Illustration Panel - Hidden on Mobile */}
+        <div className="relative w-1/2 min-h-[976px] bg-[#493d9e] rounded-lg hidden md:block">
           <div className="absolute top-6 left-6 w-40 h-12">
             <img
               className="absolute top-0 left-0 w-12 h-12"
@@ -133,7 +134,16 @@ export const CreateAccount = (): JSX.Element => {
           />
         </div>
 
-        <div className="flex flex-col w-1/2 items-start justify-center gap-12 px-6 py-10 relative bg-white">
+        {/* Form Container - Full Width on Mobile */}
+        <div className="flex flex-col w-full md:w-1/2 items-start justify-center gap-8 px-4 md:px-6 py-10 relative bg-white">
+          {/* Mobile Logo - Only visible on mobile */}
+          <div className="flex items-center gap-2 md:hidden mb-4">
+            <div className="w-8 h-8 rounded-lg bg-[#493d9e] flex items-center justify-center">
+              <span className="text-white font-bold text-sm">X</span>
+            </div>
+            <span className="text-2xl font-bold text-[#041d0f]">xcrow</span>
+          </div>
+
           <header className="inline-flex flex-col items-start gap-2 relative flex-[0_0_auto]">
             <h1 className="relative w-fit mt-[-1.00px] font-poppins-semibold-h5 font-[number:var(--poppins-semibold-h5-font-weight)] text-[#041d0f] text-[length:var(--poppins-semibold-h5-font-size)] text-center tracking-[var(--poppins-semibold-h5-letter-spacing)] leading-[var(--poppins-semibold-h5-line-height)] whitespace-nowrap [font-style:var(--poppins-semibold-h5-font-style)]">
               Create Your Account
@@ -144,10 +154,11 @@ export const CreateAccount = (): JSX.Element => {
             </p>
           </header>
 
-          <form onSubmit={onSubmit} className="flex flex-col items-start gap-8 relative self-stretch w-full flex-[0_0_auto]">
-            <div className="flex flex-col items-start gap-6 relative self-stretch w-full flex-[0_0_auto]">
-              <div className="flex items-start gap-6 relative self-stretch w-full flex-[0_0_auto]">
-                <div className="flex flex-col items-start gap-1 px-0 py-px relative flex-1 grow">
+          <form onSubmit={onSubmit} className="flex flex-col items-start gap-6 relative self-stretch w-full flex-[0_0_auto]">
+            <div className="flex flex-col items-start gap-4 relative self-stretch w-full flex-[0_0_auto]">
+              {/* First Name and Last Name - Stack on Mobile, Side by Side on Desktop */}
+              <div className="flex flex-col md:flex-row items-start gap-4 md:gap-6 relative self-stretch w-full flex-[0_0_auto]">
+                <div className="flex flex-col items-start gap-1 px-0 py-px relative flex-1 w-full">
                   <Label
                     htmlFor="firstName"
                     className="flex h-5 items-center gap-1 px-2 py-0 relative self-stretch w-full"
@@ -166,7 +177,7 @@ export const CreateAccount = (): JSX.Element => {
                   />
                 </div>
 
-                <div className="flex flex-col items-start gap-1 px-0 py-px relative flex-1 grow">
+                <div className="flex flex-col items-start gap-1 px-0 py-px relative flex-1 w-full">
                   <Label
                     htmlFor="lastName"
                     className="flex h-5 items-center gap-1 px-2 py-0 relative self-stretch w-full"
@@ -186,7 +197,7 @@ export const CreateAccount = (): JSX.Element => {
                 </div>
               </div>
 
-              <div className="flex-col h-[82px] items-start gap-1 px-0 py-px flex relative self-stretch w-full">
+              <div className="flex-col items-start gap-1 px-0 py-px flex relative self-stretch w-full">
                 <Label
                   htmlFor="email"
                   className="flex h-5 items-center gap-1 px-2 py-0 relative self-stretch w-full"
@@ -205,13 +216,13 @@ export const CreateAccount = (): JSX.Element => {
                 />
               </div>
 
-              <div className="flex-col h-[82px] items-start gap-1 px-0 py-px flex relative self-stretch w-full">
+              <div className="flex-col items-start gap-1 px-0 py-px flex relative self-stretch w-full">
                 <Label
                   htmlFor="referralCode"
                   className="flex h-5 items-center gap-1 px-2 py-0 relative self-stretch w-full"
                 >
                   <span className="relative w-fit font-poppins-regular-xs font-[number:var(--poppins-regular-xs-font-weight)] text-[#041d0f] text-[length:var(--poppins-regular-xs-font-size)] tracking-[var(--poppins-regular-xs-letter-spacing)] leading-[var(--poppins-regular-xs-line-height)] whitespace-nowrap [font-style:var(--poppins-regular-xs-font-style)]">
-                    Referral Code (Optional)
+                    Referral Code
                   </span>
                 </Label>
 
@@ -220,11 +231,39 @@ export const CreateAccount = (): JSX.Element => {
                   data-testid="input-referralCode"
                   {...form.register("referralCode")}
                   type="text"
+                  placeholder="XCR-25-0956"
                   className="h-14 px-3 py-2 bg-white rounded-lg border-[0.5px] border-solid border-[#868b90]"
                 />
               </div>
 
-              <div className="flex-col h-[82px] items-start gap-1 px-0 py-px flex relative self-stretch w-full">
+              <div className="flex-col items-start gap-1 px-0 py-px flex relative self-stretch w-full">
+                <Label
+                  htmlFor="country"
+                  className="flex h-5 items-center gap-1 px-2 py-0 relative self-stretch w-full"
+                >
+                  <span className="relative w-fit font-poppins-regular-xs font-[number:var(--poppins-regular-xs-font-weight)] text-[#041d0f] text-[length:var(--poppins-regular-xs-font-size)] tracking-[var(--poppins-regular-xs-letter-spacing)] leading-[var(--poppins-regular-xs-line-height)] whitespace-nowrap [font-style:var(--poppins-regular-xs-font-style)]">
+                    Country
+                  </span>
+                </Label>
+
+                <Select
+                  value={form.watch("country")}
+                  onValueChange={(value) => form.setValue("country", value)}
+                >
+                  <SelectTrigger data-testid="select-country" className="h-14 px-3 py-2 bg-white rounded-lg border-[0.5px] border-solid border-[#868b90]">
+                    <SelectValue>
+                      <span className="font-poppins-regular-body font-[number:var(--poppins-regular-body-font-weight)] text-[#041d0f] text-[length:var(--poppins-regular-body-font-size)] tracking-[var(--poppins-regular-body-letter-spacing)] leading-[var(--poppins-regular-body-line-height)] [font-style:var(--poppins-regular-body-font-style)]">
+                        {form.watch("country")}
+                      </span>
+                    </SelectValue>
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Nigeria">Nigeria</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex-col items-start gap-1 px-0 py-px flex relative self-stretch w-full">
                 <Label
                   htmlFor="password"
                   className="flex h-5 items-center gap-1 px-2 py-0 relative self-stretch w-full"
@@ -254,33 +293,6 @@ export const CreateAccount = (): JSX.Element => {
                     )}
                   </button>
                 </div>
-              </div>
-
-              <div className="flex-col h-[82px] items-start gap-1 px-0 py-px flex relative self-stretch w-full">
-                <Label
-                  htmlFor="country"
-                  className="flex h-5 items-center gap-1 px-2 py-0 relative self-stretch w-full"
-                >
-                  <span className="relative w-fit font-poppins-regular-xs font-[number:var(--poppins-regular-xs-font-weight)] text-[#041d0f] text-[length:var(--poppins-regular-xs-font-size)] tracking-[var(--poppins-regular-xs-letter-spacing)] leading-[var(--poppins-regular-xs-line-height)] whitespace-nowrap [font-style:var(--poppins-regular-xs-font-style)]">
-                    Country
-                  </span>
-                </Label>
-
-                <Select
-                  value={form.watch("country")}
-                  onValueChange={(value) => form.setValue("country", value)}
-                >
-                  <SelectTrigger data-testid="select-country" className="h-14 px-3 py-2 bg-white rounded-lg border-[0.5px] border-solid border-[#868b90]">
-                    <SelectValue>
-                      <span className="font-poppins-regular-body font-[number:var(--poppins-regular-body-font-weight)] text-[#041d0f] text-[length:var(--poppins-regular-body-font-size)] tracking-[var(--poppins-regular-body-letter-spacing)] leading-[var(--poppins-regular-body-line-height)] [font-style:var(--poppins-regular-body-font-style)]">
-                        {form.watch("country")}
-                      </span>
-                    </SelectValue>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Nigeria">Nigeria</SelectItem>
-                  </SelectContent>
-                </Select>
               </div>
 
               <div className="inline-flex items-center gap-2 relative flex-[0_0_auto]">
