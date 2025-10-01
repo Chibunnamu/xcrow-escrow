@@ -25,6 +25,7 @@ export interface IStorage {
   getTransactionByLink(link: string): Promise<Transaction | undefined>;
   getTransactionsBySeller(sellerId: string): Promise<Transaction[]>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
+  acceptTransaction(id: string, buyerId: string): Promise<Transaction | undefined>;
   updateTransactionStatus(id: string, status: TransactionStatus, paystackReference?: string): Promise<Transaction | undefined>;
   
   // Dispute methods
@@ -94,6 +95,14 @@ export class DatabaseStorage implements IStorage {
       ...insertTransaction,
       commission,
     }).returning();
+    return result[0];
+  }
+
+  async acceptTransaction(id: string, buyerId: string): Promise<Transaction | undefined> {
+    const result = await db.update(transactions)
+      .set({ buyerId, updatedAt: new Date() })
+      .where(eq(transactions.id, id))
+      .returning();
     return result[0];
   }
 
