@@ -337,6 +337,29 @@ export const CreateAccount = (): JSX.Element => {
                 </span>
               </Button>
 
+              <div className="relative self-stretch w-full flex items-center gap-4">
+                <div className="flex-1 h-[0.5px] bg-[#868b90]" />
+                <span className="font-poppins-regular-xs text-[#868b90]">OR</span>
+                <div className="flex-1 h-[0.5px] bg-[#868b90]" />
+              </div>
+
+              <Button
+                type="button"
+                onClick={() => window.location.href = "/api/auth/login"}
+                data-testid="button-google-signup"
+                className="flex items-center justify-center gap-2 p-3 relative self-stretch w-full flex-[0_0_auto] bg-white rounded-lg h-auto border border-[#868b90] hover:bg-gray-50"
+              >
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"/>
+                  <path d="M9.003 18c2.43 0 4.467-.806 5.956-2.18L12.05 13.56c-.806.54-1.836.86-3.047.86-2.344 0-4.328-1.584-5.036-3.711H.96v2.332C2.44 15.983 5.485 18 9.003 18z" fill="#34A853"/>
+                  <path d="M3.964 10.712c-.18-.54-.282-1.117-.282-1.71 0-.593.102-1.17.282-1.71V4.96H.957C.347 6.175 0 7.55 0 9.002c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+                  <path d="M9.003 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.464.891 11.426 0 9.003 0 5.485 0 2.44 2.017.96 4.958L3.967 7.29c.708-2.127 2.692-3.71 5.036-3.71z" fill="#EA4335"/>
+                </svg>
+                <span className="relative w-fit mt-[-1.00px] font-poppins-regular-body font-[number:var(--poppins-regular-body-font-weight)] text-[#041d0f] text-[length:var(--poppins-regular-body-font-size)] tracking-[var(--poppins-regular-body-letter-spacing)] leading-[var(--poppins-regular-body-line-height)] whitespace-nowrap [font-style:var(--poppins-regular-body-font-style)]">
+                  Continue with Google
+                </span>
+              </Button>
+
               <p className="relative w-fit [font-family:'Poppins',Helvetica] font-normal text-transparent text-sm tracking-[0] leading-[14px]">
                 <span className="text-[#041d0f] leading-[17.5px]">
                   Already have an account?
