@@ -228,6 +228,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "You cannot accept your own transaction" });
       }
 
+      // Verify the authenticated user's email matches the buyer email (case-insensitive)
+      if (existingTransaction.buyerEmail.toLowerCase() !== user.email.toLowerCase()) {
+        return res.status(403).json({ message: "This transaction is intended for a different buyer" });
+      }
+
       // Link the buyer to the transaction
       const transaction = await storage.acceptTransaction(req.params.id, user.id);
       
@@ -238,8 +243,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Payment routes
-  app.post("/api/payments/initialize", async (req: Request, res: Response, next: NextFunction) => {
+  app.post("/api/payments/initialize", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
     try {
+      const user = req.user as User;
       const { uniqueLink } = req.body;
       
       if (!uniqueLink) {
@@ -253,6 +259,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (transaction.status !== "pending") {
         return res.status(400).json({ message: "Transaction already paid or completed" });
+      }
+
+      // Verify the transaction has been accepted and the buyer matches
+      if (!transaction.buyerId) {
+        return res.status(403).json({ message: "You must accept the transaction before making payment" });
+      }
+
+      if (transaction.buyerId !== user.id) {
+        return res.status(403).json({ message: "You are not authorized to pay for this transaction" });
       }
 
       const reference = `TXN-${transaction.id}-${Date.now()}`;

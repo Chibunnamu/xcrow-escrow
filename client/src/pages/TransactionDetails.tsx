@@ -51,7 +51,7 @@ export const TransactionDetails = (): JSX.Element => {
 
   const handleProceedToPayment = () => {
     if (!userData?.user) {
-      setLocation(`/?redirect=/transaction/${params?.link}`);
+      setLocation(`/login?redirect=/transaction/${params?.link}`);
       return;
     }
     setAcceptDialogOpen(true);
