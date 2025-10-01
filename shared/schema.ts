@@ -11,6 +11,10 @@ export const users = pgTable("users", {
   lastName: text("last_name").notNull(),
   country: text("country").notNull(),
   referralCode: text("referral_code"),
+  bankCode: text("bank_code"),
+  accountNumber: text("account_number"),
+  accountName: text("account_name"),
+  recipientCode: text("recipient_code"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
@@ -83,6 +87,28 @@ export const updateDisputeStatusSchema = z.object({
   status: z.enum(disputeStatuses),
 });
 
+export const payoutStatuses = ["pending", "processing", "success", "failed"] as const;
+export type PayoutStatus = typeof payoutStatuses[number];
+
+export const payouts = pgTable("payouts", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  transactionId: varchar("transaction_id").notNull().references(() => transactions.id),
+  sellerId: varchar("seller_id").notNull().references(() => users.id),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  status: text("status").notNull().default("pending").$type<PayoutStatus>(),
+  paystackTransferCode: text("paystack_transfer_code"),
+  paystackReference: text("paystack_reference"),
+  failureReason: text("failure_reason"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const updateBankAccountSchema = z.object({
+  bankCode: z.string(),
+  accountNumber: z.string(),
+  accountName: z.string(),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
@@ -91,3 +117,5 @@ export type UpdateTransactionStatus = z.infer<typeof updateTransactionStatusSche
 export type InsertDispute = z.infer<typeof insertDisputeSchema>;
 export type Dispute = typeof disputes.$inferSelect;
 export type UpdateDisputeStatus = z.infer<typeof updateDisputeStatusSchema>;
+export type Payout = typeof payouts.$inferSelect;
+export type UpdateBankAccount = z.infer<typeof updateBankAccountSchema>;
