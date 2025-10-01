@@ -7,13 +7,24 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Search, Loader2, Eye, CheckCircle } from "lucide-react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { Search, Loader2, Eye, CheckCircle, AlertTriangle, Plus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
 export default function Office() {
   const [ongoingSearch, setOngoingSearch] = useState("");
   const [ongoingStatus, setOngoingStatus] = useState("all");
+  const [disputeStatus, setDisputeStatus] = useState("all");
+  const [disputeDialogOpen, setDisputeDialogOpen] = useState(false);
+  const [disputeForm, setDisputeForm] = useState({
+    transactionId: "",
+    reason: "",
+    description: "",
+    evidence: "",
+  });
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -21,6 +32,11 @@ export default function Office() {
   // Fetch ongoing transactions
   const { data: ongoingData, isLoading: ongoingLoading } = useQuery({
     queryKey: ["/api/office/ongoing-transactions", { status: ongoingStatus, search: ongoingSearch }],
+  });
+
+  // Fetch disputes
+  const { data: disputesData, isLoading: disputesLoading } = useQuery({
+    queryKey: ["/api/disputes", { status: disputeStatus }],
   });
 
   // Mark asset as transferred mutation
@@ -42,6 +58,38 @@ export default function Office() {
       toast({
         title: "Success",
         description: "Transaction marked as asset transferred",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  // Create dispute mutation
+  const createDisputeMutation = useMutation({
+    mutationFn: async (data: typeof disputeForm) => {
+      const response = await fetch("/api/disputes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || "Failed to create dispute");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/disputes"] });
+      setDisputeDialogOpen(false);
+      setDisputeForm({ transactionId: "", reason: "", description: "", evidence: "" });
+      toast({
+        title: "Success",
+        description: "Dispute created successfully",
       });
     },
     onError: (error: Error) => {
@@ -172,8 +220,134 @@ export default function Office() {
 
           <TabsContent value="disputes">
             <Card>
-              <CardContent className="p-6">
-                <p className="text-gray-600">Disputes will be displayed here</p>
+              <CardHeader>
+                <CardTitle>Disputes</CardTitle>
+                <div className="flex gap-4 mt-4 items-center justify-between">
+                  <Select value={disputeStatus} onValueChange={setDisputeStatus}>
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder="Filter by status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Status</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="resolved">Resolved</SelectItem>
+                      <SelectItem value="closed">Closed</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Dialog open={disputeDialogOpen} onOpenChange={setDisputeDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Open Dispute
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>Open a Dispute</DialogTitle>
+                        <DialogDescription>
+                          Create a dispute for a transaction. Provide all relevant details.
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4 mt-4">
+                        <div>
+                          <Label htmlFor="transactionId">Transaction ID</Label>
+                          <Input
+                            id="transactionId"
+                            value={disputeForm.transactionId}
+                            onChange={(e) => setDisputeForm({ ...disputeForm, transactionId: e.target.value })}
+                            placeholder="Enter transaction ID"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="reason">Reason</Label>
+                          <Input
+                            id="reason"
+                            value={disputeForm.reason}
+                            onChange={(e) => setDisputeForm({ ...disputeForm, reason: e.target.value })}
+                            placeholder="e.g., Product not delivered"
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="description">Description</Label>
+                          <Textarea
+                            id="description"
+                            value={disputeForm.description}
+                            onChange={(e) => setDisputeForm({ ...disputeForm, description: e.target.value })}
+                            placeholder="Provide detailed description of the issue"
+                            rows={4}
+                          />
+                        </div>
+                        <div>
+                          <Label htmlFor="evidence">Evidence (Optional)</Label>
+                          <Textarea
+                            id="evidence"
+                            value={disputeForm.evidence}
+                            onChange={(e) => setDisputeForm({ ...disputeForm, evidence: e.target.value })}
+                            placeholder="Links to screenshots, emails, or other evidence"
+                            rows={2}
+                          />
+                        </div>
+                        <Button
+                          onClick={() => createDisputeMutation.mutate(disputeForm)}
+                          disabled={createDisputeMutation.isPending || !disputeForm.transactionId || !disputeForm.reason || !disputeForm.description}
+                          className="w-full"
+                        >
+                          {createDisputeMutation.isPending ? (
+                            <>
+                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                              Creating...
+                            </>
+                          ) : (
+                            "Create Dispute"
+                          )}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {disputesLoading ? (
+                  <div className="flex justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                  </div>
+                ) : !(disputesData as any)?.disputes || (disputesData as any).disputes.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    No disputes found
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Transaction ID</TableHead>
+                        <TableHead>Reason</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Created</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {(disputesData as any).disputes.map((dispute: any) => (
+                        <TableRow key={dispute.id}>
+                          <TableCell className="font-medium">{dispute.transactionId.slice(0, 8)}...</TableCell>
+                          <TableCell>{dispute.reason}</TableCell>
+                          <TableCell>
+                            <Badge variant={dispute.status === "pending" ? "secondary" : dispute.status === "resolved" ? "default" : "outline"}>
+                              {dispute.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{new Date(dispute.createdAt).toLocaleDateString()}</TableCell>
+                          <TableCell className="text-right">
+                            <Button variant="outline" size="sm">
+                              <Eye className="w-4 h-4 mr-1" />
+                              View Details
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
