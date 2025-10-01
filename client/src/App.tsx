@@ -13,6 +13,7 @@ import { CreateTransaction } from "@/pages/CreateTransaction";
 import { TransactionDetails } from "@/pages/TransactionDetails";
 import { PaymentPage } from "@/pages/PaymentPage";
 import { BuyerConfirmation } from "@/pages/BuyerConfirmation";
+import Office from "@/pages/Office";
 
 function Router() {
   return (
@@ -30,6 +31,11 @@ function Router() {
       <Route path="/create-transaction">
         <DashboardLayout>
           <CreateTransaction />
+        </DashboardLayout>
+      </Route>
+      <Route path="/office">
+        <DashboardLayout>
+          <Office />
         </DashboardLayout>
       </Route>
       
