@@ -4,7 +4,7 @@ import { Strategy as LocalStrategy } from "passport-local";
 import { storage } from "./storage";
 import type { User } from "@shared/schema";
 import type { Express } from "express";
-import session from "express-session";
+import { getSession } from "./replitAuth";
 
 const SALT_ROUNDS = 10;
 
@@ -17,24 +17,9 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 export function setupAuth(app: Express) {
-  // Session configuration
-  if (!process.env.SESSION_SECRET) {
-    throw new Error("SESSION_SECRET environment variable must be set");
-  }
-
-  app.use(
-    session({
-      secret: process.env.SESSION_SECRET,
-      resave: false,
-      saveUninitialized: false,
-      cookie: {
-        secure: process.env.NODE_ENV === "production",
-        httpOnly: true,
-        maxAge: 24 * 60 * 60 * 1000, // 24 hours
-        sameSite: "lax",
-      },
-    })
-  );
+  // Use database session store (required for OAuth)
+  app.set("trust proxy", 1);
+  app.use(getSession());
 
   // Initialize passport
   app.use(passport.initialize());
@@ -54,6 +39,10 @@ export function setupAuth(app: Express) {
             return done(null, false, { message: "Invalid email or password" });
           }
 
+          if (!user.password) {
+            return done(null, false, { message: "Please sign in with Google" });
+          }
+
           const isValid = await verifyPassword(password, user.password);
           if (!isValid) {
             return done(null, false, { message: "Invalid email or password" });
@@ -67,16 +56,29 @@ export function setupAuth(app: Express) {
     )
   );
 
-  // Serialize user to session
+  // Serialize user to session (handle both OAuth and local users)
   passport.serializeUser((user: Express.User, done) => {
-    done(null, (user as User).id);
+    const userData = user as any;
+    if (userData.claims) {
+      // OAuth user
+      done(null, { type: 'oauth', data: userData });
+    } else {
+      // Local user
+      done(null, { type: 'local', id: (user as User).id });
+    }
   });
 
-  // Deserialize user from session
-  passport.deserializeUser(async (id: string, done) => {
+  // Deserialize user from session (handle both OAuth and local users)
+  passport.deserializeUser(async (data: any, done) => {
     try {
-      const user = await storage.getUser(id);
-      done(null, user);
+      if (data.type === 'oauth') {
+        // OAuth user - return the OAuth session data
+        done(null, data.data);
+      } else {
+        // Local user - fetch from database
+        const user = await storage.getUser(data.id);
+        done(null, user);
+      }
     } catch (error) {
       done(error);
     }

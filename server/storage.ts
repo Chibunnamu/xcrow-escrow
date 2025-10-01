@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Transaction, type InsertTransaction, type Dispute, type InsertDispute, type Payout, type PayoutStatus, users, transactions, disputes, payouts, type TransactionStatus, type DisputeStatus } from "@shared/schema";
+import { type User, type InsertUser, type UpsertUser, type Transaction, type InsertTransaction, type Dispute, type InsertDispute, type Payout, type PayoutStatus, users, transactions, disputes, payouts, type TransactionStatus, type DisputeStatus } from "@shared/schema";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { eq, desc } from "drizzle-orm";
 import { Pool } from "pg";
@@ -19,6 +19,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  upsertUser(user: UpsertUser): Promise<User>;
   
   // Transaction methods
   getTransaction(id: string): Promise<Transaction | undefined>;
@@ -83,6 +84,21 @@ export class DatabaseStorage implements IStorage {
       password: hashedPassword,
     }).returning();
     return result[0];
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
   }
 
   // Transaction methods
