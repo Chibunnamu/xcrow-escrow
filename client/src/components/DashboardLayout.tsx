@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Loader2, Menu } from "lucide-react";
 import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -34,11 +33,9 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps): JSX.Element
       <AppSidebar user={userData.user} />
       <SidebarInset>
         <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-white px-4 md:hidden">
-          <SidebarTrigger>
-            <Button variant="ghost" size="icon">
-              <Menu className="h-5 w-5" />
-              <span className="sr-only">Toggle menu</span>
-            </Button>
+          <SidebarTrigger className="h-10 w-10">
+            <Menu className="h-5 w-5" />
+            <span className="sr-only">Toggle menu</span>
           </SidebarTrigger>
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-lg bg-[#493d9e] flex items-center justify-center">
