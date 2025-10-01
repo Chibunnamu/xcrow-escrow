@@ -14,6 +14,7 @@ import { TransactionDetails } from "@/pages/TransactionDetails";
 import { PaymentPage } from "@/pages/PaymentPage";
 import { BuyerConfirmation } from "@/pages/BuyerConfirmation";
 import Office from "@/pages/Office";
+import { Settings } from "@/pages/Settings";
 
 function Router() {
   return (
@@ -36,6 +37,11 @@ function Router() {
       <Route path="/office">
         <DashboardLayout>
           <Office />
+        </DashboardLayout>
+      </Route>
+      <Route path="/settings">
+        <DashboardLayout>
+          <Settings />
         </DashboardLayout>
       </Route>
       
