@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Transaction, type InsertTransaction, type Dispute, type InsertDispute, users, transactions, disputes, type TransactionStatus, type DisputeStatus } from "@shared/schema";
+import { type User, type InsertUser, type Transaction, type InsertTransaction, type Dispute, type InsertDispute, type Payout, type PayoutStatus, users, transactions, disputes, payouts, type TransactionStatus, type DisputeStatus } from "@shared/schema";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { eq } from "drizzle-orm";
 import { Pool } from "pg";
@@ -52,6 +52,16 @@ export interface IStorage {
     details: string;
     time: string;
   }>>;
+  
+  // Bank account methods
+  updateUserBankAccount(userId: string, bankCode: string, accountNumber: string, accountName: string, recipientCode: string): Promise<User | undefined>;
+  getUserBankAccount(userId: string): Promise<User | undefined>;
+  
+  // Payout methods
+  createPayout(transactionId: string, sellerId: string, amount: string): Promise<Payout>;
+  updatePayoutStatus(payoutId: string, status: PayoutStatus, transferCode?: string, paystackReference?: string, failureReason?: string): Promise<Payout | undefined>;
+  getPayoutsBySeller(sellerId: string): Promise<Payout[]>;
+  getPayoutByTransaction(transactionId: string): Promise<Payout | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -328,6 +338,63 @@ export class DatabaseStorage implements IStorage {
       });
     
     return activities;
+  }
+
+  // Bank account methods
+  async updateUserBankAccount(userId: string, bankCode: string, accountNumber: string, accountName: string, recipientCode: string): Promise<User | undefined> {
+    const result = await db.update(users)
+      .set({ 
+        bankCode, 
+        accountNumber, 
+        accountName, 
+        recipientCode 
+      })
+      .where(eq(users.id, userId))
+      .returning();
+    return result[0];
+  }
+
+  async getUserBankAccount(userId: string): Promise<User | undefined> {
+    return await this.getUser(userId);
+  }
+
+  // Payout methods
+  async createPayout(transactionId: string, sellerId: string, amount: string): Promise<Payout> {
+    const result = await db.insert(payouts).values({
+      transactionId,
+      sellerId,
+      amount,
+      status: "pending",
+    }).returning();
+    return result[0];
+  }
+
+  async updatePayoutStatus(payoutId: string, status: PayoutStatus, transferCode?: string, paystackReference?: string, failureReason?: string): Promise<Payout | undefined> {
+    const updateData: any = { status, updatedAt: new Date() };
+    if (transferCode) {
+      updateData.paystackTransferCode = transferCode;
+    }
+    if (paystackReference) {
+      updateData.paystackReference = paystackReference;
+    }
+    if (failureReason) {
+      updateData.failureReason = failureReason;
+    }
+    
+    const result = await db.update(payouts)
+      .set(updateData)
+      .where(eq(payouts.id, payoutId))
+      .returning();
+    return result[0];
+  }
+
+  async getPayoutsBySeller(sellerId: string): Promise<Payout[]> {
+    return await db.select().from(payouts).where(eq(payouts.sellerId, sellerId));
+  }
+
+  async getPayoutByTransaction(transactionId: string): Promise<Payout | undefined> {
+    const result = await db.select().from(payouts).where(eq(payouts.transactionId, transactionId)).limit(1);
+    return result[0];
   }
 }
 
