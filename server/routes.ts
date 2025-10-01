@@ -323,6 +323,89 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Office routes - Ongoing transactions and history
+  app.get("/api/office/ongoing-transactions", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user as User;
+      const allTransactions = await storage.getTransactionsBySeller(user.id);
+      
+      // Filter for ongoing transactions (not completed)
+      const ongoingTransactions = allTransactions.filter(
+        t => t.status === "pending" || t.status === "paid" || t.status === "asset_transferred"
+      );
+      
+      // Apply optional filters from query params
+      const { status, search } = req.query;
+      
+      let filtered = ongoingTransactions;
+      
+      if (status && status !== "all") {
+        filtered = filtered.filter(t => t.status === status);
+      }
+      
+      if (search) {
+        const searchLower = (search as string).toLowerCase();
+        filtered = filtered.filter(
+          t => t.buyerEmail.toLowerCase().includes(searchLower) ||
+               t.itemName.toLowerCase().includes(searchLower) ||
+               t.id.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      res.json({ transactions: filtered });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/office/transaction-history", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user as User;
+      const allTransactions = await storage.getTransactionsBySeller(user.id);
+      
+      // Filter for completed transactions only
+      const historyTransactions = allTransactions.filter(t => t.status === "completed");
+      
+      // Apply optional filters from query params
+      const { dateFrom, dateTo, search, minAmount, maxAmount } = req.query;
+      
+      let filtered = historyTransactions;
+      
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom as string);
+        filtered = filtered.filter(t => new Date(t.createdAt) >= fromDate);
+      }
+      
+      if (dateTo) {
+        const toDate = new Date(dateTo as string);
+        filtered = filtered.filter(t => new Date(t.createdAt) <= toDate);
+      }
+      
+      if (search) {
+        const searchLower = (search as string).toLowerCase();
+        filtered = filtered.filter(
+          t => t.buyerEmail.toLowerCase().includes(searchLower) ||
+               t.itemName.toLowerCase().includes(searchLower) ||
+               t.id.toLowerCase().includes(searchLower)
+        );
+      }
+      
+      if (minAmount) {
+        const min = parseFloat(minAmount as string);
+        filtered = filtered.filter(t => parseFloat(t.price) >= min);
+      }
+      
+      if (maxAmount) {
+        const max = parseFloat(maxAmount as string);
+        filtered = filtered.filter(t => parseFloat(t.price) <= max);
+      }
+      
+      res.json({ transactions: filtered });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
