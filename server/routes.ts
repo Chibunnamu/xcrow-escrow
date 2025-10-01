@@ -202,45 +202,52 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If transaction is completed, initiate payout to seller
       if (result.data.status === "completed") {
         try {
-          const seller = await storage.getUser(existingTransaction.sellerId);
-          
-          if (!seller) {
-            console.error("Seller not found for transaction:", req.params.id);
-          } else if (!seller.recipientCode) {
-            console.log("Seller has no bank account configured, payout skipped for transaction:", req.params.id);
+          // Check for existing payout to prevent duplicates (idempotency)
+          const existingPayout = await storage.getPayoutByTransaction(req.params.id);
+          if (existingPayout && (existingPayout.status === "success" || existingPayout.status === "processing")) {
+            console.log("Payout already exists for transaction:", req.params.id, "with status:", existingPayout.status);
           } else {
-            const payoutAmount = (parseFloat(existingTransaction.price) - parseFloat(existingTransaction.commission)).toFixed(2);
+            const seller = await storage.getUser(existingTransaction.sellerId);
             
-            const payout = await storage.createPayout(
-              req.params.id,
-              existingTransaction.sellerId,
-              payoutAmount
-            );
-            
-            try {
-              const transferReference = `PAYOUT-${payout.id}-${Date.now()}`;
-              const transferData = await initiateTransfer(
-                seller.recipientCode,
-                parseFloat(payoutAmount),
-                transferReference,
-                `Payout for transaction ${existingTransaction.itemName}`
+            if (!seller) {
+              console.error("Seller not found for transaction:", req.params.id);
+            } else if (!seller.recipientCode) {
+              console.log("Seller has no bank account configured, payout skipped for transaction:", req.params.id);
+            } else {
+              const payoutAmount = (parseFloat(existingTransaction.price) - parseFloat(existingTransaction.commission)).toFixed(2);
+              
+              // Create or reuse existing payout record
+              const payout = existingPayout || await storage.createPayout(
+                req.params.id,
+                existingTransaction.sellerId,
+                payoutAmount
               );
               
-              await storage.updatePayoutStatus(
-                payout.id,
-                "success",
-                transferData.data.transfer_code,
-                transferData.data.reference
-              );
-            } catch (transferError: any) {
-              console.error("Transfer initiation failed:", transferError);
-              await storage.updatePayoutStatus(
-                payout.id,
-                "failed",
-                undefined,
-                undefined,
-                transferError.message || "Transfer initiation failed"
-              );
+              try {
+                const transferReference = `PAYOUT-${payout.id}`;
+                const transferData = await initiateTransfer(
+                  seller.recipientCode,
+                  parseFloat(payoutAmount),
+                  transferReference,
+                  `Payout for transaction ${existingTransaction.itemName}`
+                );
+                
+                await storage.updatePayoutStatus(
+                  payout.id,
+                  "success",
+                  transferData.data.transfer_code,
+                  transferData.data.reference
+                );
+              } catch (transferError: any) {
+                console.error("Transfer initiation failed:", transferError);
+                await storage.updatePayoutStatus(
+                  payout.id,
+                  "failed",
+                  undefined,
+                  undefined,
+                  transferError.message || "Transfer initiation failed"
+                );
+              }
             }
           }
         } catch (payoutError: any) {

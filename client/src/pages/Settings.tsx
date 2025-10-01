@@ -8,7 +8,7 @@ import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { Loader2, CheckCircle, Building2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface Bank {
   id: number;
@@ -122,10 +122,11 @@ export const Settings = (): JSX.Element => {
     setVerifiedAccountName("");
   };
 
-  if (!userData?.user) {
-    setLocation("/login");
-    return <></>;
-  }
+  useEffect(() => {
+    if (!userLoading && !userData?.user) {
+      setLocation("/login");
+    }
+  }, [userData, userLoading, setLocation]);
 
   if (userLoading) {
     return (

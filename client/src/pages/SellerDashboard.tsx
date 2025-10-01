@@ -5,11 +5,13 @@ import { Badge } from "@/components/ui/badge";
 import { StatisticsCard } from "@/components/StatisticsCard";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Users, CheckCircle, DollarSign, Loader2 } from "lucide-react";
+import { Users, CheckCircle, DollarSign, Loader2, Info, Copy } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { type Transaction } from "@shared/schema";
+import { type Transaction, type Payout } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { format } from "date-fns";
 
 export const SellerDashboard = (): JSX.Element => {
   const [, setLocation] = useLocation();
@@ -45,6 +47,13 @@ export const SellerDashboard = (): JSX.Element => {
 
   const { data: purchases, isLoading: purchasesLoading } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions/buyer", userData?.user?.id],
+    enabled: !!userData?.user,
+  });
+
+  type PayoutWithTransaction = Payout & { transaction: Transaction };
+
+  const { data: payoutsData, isLoading: payoutsLoading } = useQuery<{ payouts: PayoutWithTransaction[] }>({
+    queryKey: ["/api/payouts"],
     enabled: !!userData?.user,
   });
 
@@ -90,6 +99,34 @@ export const SellerDashboard = (): JSX.Element => {
         {config.label}
       </Badge>
     );
+  };
+
+  const getPayoutStatusBadge = (status: string) => {
+    const statusConfig = {
+      pending: { label: "Pending", className: "bg-yellow-100 text-yellow-800" },
+      processing: { label: "Processing", className: "bg-blue-100 text-blue-800" },
+      success: { label: "Success", className: "bg-green-100 text-green-800" },
+      failed: { label: "Failed", className: "bg-red-100 text-red-800" },
+    };
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+    return (
+      <Badge className={config.className} data-testid={`badge-payout-status-${status}`}>
+        {config.label}
+      </Badge>
+    );
+  };
+
+  const formatCurrency = (amount: string) => {
+    const num = parseFloat(amount);
+    return `₦${num.toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    toast({
+      title: "Copied!",
+      description: "Reference copied to clipboard",
+    });
   };
 
   return (
@@ -235,7 +272,7 @@ export const SellerDashboard = (): JSX.Element => {
           </Card>
 
           {/* Recent Activities */}
-          <Card>
+          <Card className="mb-8">
             <CardContent className="p-6">
               <h2 className="text-xl font-bold text-gray-900 mb-6">Recent Activities</h2>
               {activitiesLoading ? (
@@ -277,6 +314,106 @@ export const SellerDashboard = (): JSX.Element => {
                         <tr>
                           <td colSpan={3} className="px-6 py-8 text-center text-sm text-gray-500">
                             No recent activities. Create your first transaction to get started.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Payout History */}
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center gap-2 mb-6">
+                <h2 className="text-xl font-bold text-gray-900">Payout History</h2>
+                <TooltipProvider>
+                  <UITooltip>
+                    <TooltipTrigger asChild>
+                      <Info className="w-4 h-4 text-gray-400 cursor-help" data-testid="icon-payout-info" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <div className="space-y-2 text-xs">
+                        <p><strong>Pending:</strong> Payout initiated, waiting for processing</p>
+                        <p><strong>Processing:</strong> Transfer in progress with Paystack</p>
+                        <p><strong>Success:</strong> Money successfully transferred to your bank</p>
+                        <p><strong>Failed:</strong> Transfer failed (check failure reason)</p>
+                      </div>
+                    </TooltipContent>
+                  </UITooltip>
+                </TooltipProvider>
+              </div>
+              {payoutsLoading ? (
+                <div className="flex justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin" data-testid="loader-payouts" />
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                          Transaction
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                          Amount
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                          Date
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                          Reference
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {payoutsData?.payouts && payoutsData.payouts.length > 0 ? (
+                        payoutsData.payouts.slice(0, 10).map((payout) => (
+                          <tr key={payout.id} className="hover:bg-gray-50" data-testid={`payout-row-${payout.id}`}>
+                            <td className="px-6 py-4 text-sm font-medium text-gray-900" data-testid={`payout-transaction-${payout.id}`}>
+                              {payout.transaction.itemName}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600" data-testid={`payout-amount-${payout.id}`}>
+                              {formatCurrency(payout.amount)}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              <div className="flex flex-col gap-1">
+                                {getPayoutStatusBadge(payout.status)}
+                                {payout.status === "failed" && payout.failureReason && (
+                                  <span className="text-xs text-red-600" data-testid={`payout-failure-${payout.id}`}>
+                                    {payout.failureReason}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600" data-testid={`payout-date-${payout.id}`}>
+                              {format(new Date(payout.createdAt), "MMM dd, yyyy HH:mm")}
+                            </td>
+                            <td className="px-6 py-4 text-sm text-gray-600">
+                              {payout.paystackReference ? (
+                                <button
+                                  onClick={() => copyToClipboard(payout.paystackReference!)}
+                                  className="flex items-center gap-1 text-[#493d9e] hover:underline"
+                                  data-testid={`button-copy-reference-${payout.id}`}
+                                >
+                                  <span className="truncate max-w-[150px]">{payout.paystackReference}</span>
+                                  <Copy className="w-3 h-3 flex-shrink-0" />
+                                </button>
+                              ) : (
+                                <span className="text-gray-400">-</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={5} className="px-6 py-8 text-center text-sm text-gray-500" data-testid="text-no-payouts">
+                            No payouts yet. Complete transactions to receive payouts.
                           </td>
                         </tr>
                       )}
