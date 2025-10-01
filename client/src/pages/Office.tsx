@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Search, Loader2, Eye, CheckCircle, AlertTriangle, Plus } from "lucide-react";
+import { Search, Loader2, Eye, CheckCircle, AlertTriangle, Plus, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
 
@@ -25,6 +25,12 @@ export default function Office() {
     description: "",
     evidence: "",
   });
+  const [historySearch, setHistorySearch] = useState("");
+  const [historyDateFrom, setHistoryDateFrom] = useState("");
+  const [historyDateTo, setHistoryDateTo] = useState("");
+  const [historyMinAmount, setHistoryMinAmount] = useState("");
+  const [historyMaxAmount, setHistoryMaxAmount] = useState("");
+  
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -37,6 +43,17 @@ export default function Office() {
   // Fetch disputes
   const { data: disputesData, isLoading: disputesLoading } = useQuery({
     queryKey: ["/api/disputes", { status: disputeStatus }],
+  });
+
+  // Fetch transaction history
+  const { data: historyData, isLoading: historyLoading } = useQuery({
+    queryKey: ["/api/office/transaction-history", { 
+      search: historySearch,
+      dateFrom: historyDateFrom,
+      dateTo: historyDateTo,
+      minAmount: historyMinAmount,
+      maxAmount: historyMaxAmount,
+    }],
   });
 
   // Mark asset as transferred mutation
@@ -113,6 +130,31 @@ export default function Office() {
         {status.replace("_", " ")}
       </Badge>
     );
+  };
+
+  const exportToCSV = (transactions: any[]) => {
+    const headers = ["Item Name", "Buyer Email", "Amount (₦)", "Commission (₦)", "Status", "Created Date"];
+    const rows = transactions.map(t => [
+      t.itemName,
+      t.buyerEmail,
+      parseFloat(t.price).toFixed(2),
+      parseFloat(t.commission).toFixed(2),
+      t.status,
+      new Date(t.createdAt).toLocaleDateString(),
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(row => row.map(cell => `"${cell}"`).join(",")),
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `transaction-history-${new Date().toISOString().split("T")[0]}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -354,8 +396,119 @@ export default function Office() {
 
           <TabsContent value="history">
             <Card>
-              <CardContent className="p-6">
-                <p className="text-gray-600">Transaction history will be displayed here</p>
+              <CardHeader>
+                <CardTitle>Transaction History</CardTitle>
+                <div className="space-y-4 mt-4">
+                  <div className="flex gap-4">
+                    <div className="relative flex-1">
+                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                      <Input
+                        placeholder="Search by buyer email, item name..."
+                        value={historySearch}
+                        onChange={(e) => setHistorySearch(e.target.value)}
+                        className="pl-10"
+                      />
+                    </div>
+                    <Button
+                      variant="outline"
+                      onClick={() => exportToCSV((historyData as any)?.transactions || [])}
+                      disabled={!(historyData as any)?.transactions || (historyData as any).transactions.length === 0}
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Export CSV
+                    </Button>
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div>
+                      <Label htmlFor="dateFrom">Date From</Label>
+                      <Input
+                        id="dateFrom"
+                        type="date"
+                        value={historyDateFrom}
+                        onChange={(e) => setHistoryDateFrom(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="dateTo">Date To</Label>
+                      <Input
+                        id="dateTo"
+                        type="date"
+                        value={historyDateTo}
+                        onChange={(e) => setHistoryDateTo(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="minAmount">Min Amount (₦)</Label>
+                      <Input
+                        id="minAmount"
+                        type="number"
+                        placeholder="0"
+                        value={historyMinAmount}
+                        onChange={(e) => setHistoryMinAmount(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="maxAmount">Max Amount (₦)</Label>
+                      <Input
+                        id="maxAmount"
+                        type="number"
+                        placeholder="1000000"
+                        value={historyMaxAmount}
+                        onChange={(e) => setHistoryMaxAmount(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                {historyLoading ? (
+                  <div className="flex justify-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                  </div>
+                ) : !(historyData as any)?.transactions || (historyData as any).transactions.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    No completed transactions found
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <div className="text-sm text-gray-600">
+                      Total: {(historyData as any).transactions.length} transactions
+                    </div>
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead>Item</TableHead>
+                          <TableHead>Buyer Email</TableHead>
+                          <TableHead>Amount</TableHead>
+                          <TableHead>Commission</TableHead>
+                          <TableHead>Completed</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {(historyData as any).transactions.map((transaction: any) => (
+                          <TableRow key={transaction.id}>
+                            <TableCell className="font-medium">{transaction.itemName}</TableCell>
+                            <TableCell>{transaction.buyerEmail}</TableCell>
+                            <TableCell>₦{parseFloat(transaction.price).toFixed(2)}</TableCell>
+                            <TableCell className="text-red-600">-₦{parseFloat(transaction.commission).toFixed(2)}</TableCell>
+                            <TableCell>{new Date(transaction.createdAt).toLocaleDateString()}</TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setLocation(`/transaction/${transaction.uniqueLink}`)}
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                View
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
