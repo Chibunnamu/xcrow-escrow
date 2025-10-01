@@ -1,5 +1,5 @@
-import { EyeIcon } from "lucide-react";
-import React from "react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -11,34 +11,69 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { insertUserSchema, type InsertUser } from "@shared/schema";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 
 export const CreateAccount = (): JSX.Element => {
-  const formFields: Array<{ id: string; label: string; type: string; placeholder: string; defaultValue?: string }> = [
-    { id: "firstName", label: "First Name", type: "text", placeholder: "" },
-    { id: "lastName", label: "Last Name", type: "text", placeholder: "" },
-  ];
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
+  const [showPassword, setShowPassword] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
 
-  const fullWidthFields: Array<{ id: string; label: string; type: string; placeholder: string; defaultValue?: string }> = [
-    { id: "email", label: "Email Address", type: "email", placeholder: "" },
-    {
-      id: "referralCode",
-      label: "Referral Code",
-      type: "text",
-      placeholder: "",
-      defaultValue: "XCR-25-0956",
+  const form = useForm<InsertUser>({
+    resolver: zodResolver(insertUserSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+      country: "Nigeria",
+      referralCode: "",
     },
-    {
-      id: "password",
-      label: "Create Password",
-      type: "password",
-      placeholder: "",
+  });
+
+  const signupMutation = useMutation({
+    mutationFn: async (data: InsertUser) => {
+      const res = await apiRequest("POST", "/api/signup", data);
+      return await res.json();
     },
-  ];
+    onSuccess: () => {
+      toast({
+        title: "Account created successfully",
+        description: "Welcome to Xcrow!",
+      });
+      setLocation("/seller-dashboard");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Signup failed",
+        description: error.message || "Failed to create account",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const onSubmit = form.handleSubmit((data) => {
+    if (!agreedToTerms) {
+      toast({
+        title: "Terms required",
+        description: "Please agree to the Terms of Use and Privacy Policy",
+        variant: "destructive",
+      });
+      return;
+    }
+    signupMutation.mutate(data);
+  });
 
   return (
-    <div className="w-[1440px] h-[1024px] flex bg-white">
-      <div className="flex mt-6 w-[1392px] h-[976px] ml-6 relative items-start gap-6">
-        <div className="relative w-[684px] h-[976px] bg-[#493d9e]">
+    <div className="w-full min-h-screen flex bg-white">
+      <div className="flex w-full max-w-[1440px] mx-auto items-start gap-6 p-6">
+        <div className="relative w-1/2 min-h-[976px] bg-[#493d9e] rounded-lg">
           <div className="absolute top-6 left-6 w-40 h-12">
             <img
               className="absolute top-0 left-0 w-12 h-12"
@@ -98,7 +133,7 @@ export const CreateAccount = (): JSX.Element => {
           />
         </div>
 
-        <div className="flex flex-col w-[684px] items-start justify-center gap-12 px-6 py-10 relative bg-white">
+        <div className="flex flex-col w-1/2 items-start justify-center gap-12 px-6 py-10 relative bg-white">
           <header className="inline-flex flex-col items-start gap-2 relative flex-[0_0_auto]">
             <h1 className="relative w-fit mt-[-1.00px] font-poppins-semibold-h5 font-[number:var(--poppins-semibold-h5-font-weight)] text-[#041d0f] text-[length:var(--poppins-semibold-h5-font-size)] text-center tracking-[var(--poppins-semibold-h5-letter-spacing)] leading-[var(--poppins-semibold-h5-line-height)] whitespace-nowrap [font-style:var(--poppins-semibold-h5-font-style)]">
               Create Your Account
@@ -109,60 +144,117 @@ export const CreateAccount = (): JSX.Element => {
             </p>
           </header>
 
-          <form className="flex flex-col items-start gap-8 relative self-stretch w-full flex-[0_0_auto]">
+          <form onSubmit={onSubmit} className="flex flex-col items-start gap-8 relative self-stretch w-full flex-[0_0_auto]">
             <div className="flex flex-col items-start gap-6 relative self-stretch w-full flex-[0_0_auto]">
               <div className="flex items-start gap-6 relative self-stretch w-full flex-[0_0_auto]">
-                {formFields.map((field) => (
-                  <div
-                    key={field.id}
-                    className="flex flex-col items-start gap-1 px-0 py-px relative flex-1 grow"
-                  >
-                    <Label
-                      htmlFor={field.id}
-                      className="flex h-5 items-center gap-1 px-2 py-0 relative self-stretch w-full"
-                    >
-                      <span className="relative w-fit font-poppins-regular-xs font-[number:var(--poppins-regular-xs-font-weight)] text-[#041d0f] text-[length:var(--poppins-regular-xs-font-size)] tracking-[var(--poppins-regular-xs-letter-spacing)] leading-[var(--poppins-regular-xs-line-height)] whitespace-nowrap [font-style:var(--poppins-regular-xs-font-style)]">
-                        {field.label}
-                      </span>
-                    </Label>
-
-                    <Input
-                      id={field.id}
-                      type={field.type}
-                      className="h-14 px-3 py-2 bg-white rounded-lg border-[0.5px] border-solid border-[#868b90]"
-                      defaultValue={field.defaultValue}
-                    />
-                  </div>
-                ))}
-              </div>
-
-              {fullWidthFields.map((field) => (
-                <div
-                  key={field.id}
-                  className="flex-col h-[82px] items-start gap-1 px-0 py-px flex relative self-stretch w-full"
-                >
+                <div className="flex flex-col items-start gap-1 px-0 py-px relative flex-1 grow">
                   <Label
-                    htmlFor={field.id}
+                    htmlFor="firstName"
                     className="flex h-5 items-center gap-1 px-2 py-0 relative self-stretch w-full"
                   >
                     <span className="relative w-fit font-poppins-regular-xs font-[number:var(--poppins-regular-xs-font-weight)] text-[#041d0f] text-[length:var(--poppins-regular-xs-font-size)] tracking-[var(--poppins-regular-xs-letter-spacing)] leading-[var(--poppins-regular-xs-line-height)] whitespace-nowrap [font-style:var(--poppins-regular-xs-font-style)]">
-                      {field.label}
+                      First Name
                     </span>
                   </Label>
 
-                  <div className="relative w-full">
-                    <Input
-                      id={field.id}
-                      type={field.type}
-                      className="h-14 px-3 py-2 bg-white rounded-lg border-[0.5px] border-solid border-[#868b90] pr-10"
-                      defaultValue={field.defaultValue}
-                    />
-                    {field.type === "password" && (
-                      <EyeIcon className="absolute right-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-500" />
-                    )}
-                  </div>
+                  <Input
+                    id="firstName"
+                    data-testid="input-firstName"
+                    {...form.register("firstName")}
+                    type="text"
+                    className="h-14 px-3 py-2 bg-white rounded-lg border-[0.5px] border-solid border-[#868b90]"
+                  />
                 </div>
-              ))}
+
+                <div className="flex flex-col items-start gap-1 px-0 py-px relative flex-1 grow">
+                  <Label
+                    htmlFor="lastName"
+                    className="flex h-5 items-center gap-1 px-2 py-0 relative self-stretch w-full"
+                  >
+                    <span className="relative w-fit font-poppins-regular-xs font-[number:var(--poppins-regular-xs-font-weight)] text-[#041d0f] text-[length:var(--poppins-regular-xs-font-size)] tracking-[var(--poppins-regular-xs-letter-spacing)] leading-[var(--poppins-regular-xs-line-height)] whitespace-nowrap [font-style:var(--poppins-regular-xs-font-style)]">
+                      Last Name
+                    </span>
+                  </Label>
+
+                  <Input
+                    id="lastName"
+                    data-testid="input-lastName"
+                    {...form.register("lastName")}
+                    type="text"
+                    className="h-14 px-3 py-2 bg-white rounded-lg border-[0.5px] border-solid border-[#868b90]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex-col h-[82px] items-start gap-1 px-0 py-px flex relative self-stretch w-full">
+                <Label
+                  htmlFor="email"
+                  className="flex h-5 items-center gap-1 px-2 py-0 relative self-stretch w-full"
+                >
+                  <span className="relative w-fit font-poppins-regular-xs font-[number:var(--poppins-regular-xs-font-weight)] text-[#041d0f] text-[length:var(--poppins-regular-xs-font-size)] tracking-[var(--poppins-regular-xs-letter-spacing)] leading-[var(--poppins-regular-xs-line-height)] whitespace-nowrap [font-style:var(--poppins-regular-xs-font-style)]">
+                    Email Address
+                  </span>
+                </Label>
+
+                <Input
+                  id="email"
+                  data-testid="input-email"
+                  {...form.register("email")}
+                  type="email"
+                  className="h-14 px-3 py-2 bg-white rounded-lg border-[0.5px] border-solid border-[#868b90]"
+                />
+              </div>
+
+              <div className="flex-col h-[82px] items-start gap-1 px-0 py-px flex relative self-stretch w-full">
+                <Label
+                  htmlFor="referralCode"
+                  className="flex h-5 items-center gap-1 px-2 py-0 relative self-stretch w-full"
+                >
+                  <span className="relative w-fit font-poppins-regular-xs font-[number:var(--poppins-regular-xs-font-weight)] text-[#041d0f] text-[length:var(--poppins-regular-xs-font-size)] tracking-[var(--poppins-regular-xs-letter-spacing)] leading-[var(--poppins-regular-xs-line-height)] whitespace-nowrap [font-style:var(--poppins-regular-xs-font-style)]">
+                    Referral Code (Optional)
+                  </span>
+                </Label>
+
+                <Input
+                  id="referralCode"
+                  data-testid="input-referralCode"
+                  {...form.register("referralCode")}
+                  type="text"
+                  className="h-14 px-3 py-2 bg-white rounded-lg border-[0.5px] border-solid border-[#868b90]"
+                />
+              </div>
+
+              <div className="flex-col h-[82px] items-start gap-1 px-0 py-px flex relative self-stretch w-full">
+                <Label
+                  htmlFor="password"
+                  className="flex h-5 items-center gap-1 px-2 py-0 relative self-stretch w-full"
+                >
+                  <span className="relative w-fit font-poppins-regular-xs font-[number:var(--poppins-regular-xs-font-weight)] text-[#041d0f] text-[length:var(--poppins-regular-xs-font-size)] tracking-[var(--poppins-regular-xs-letter-spacing)] leading-[var(--poppins-regular-xs-line-height)] whitespace-nowrap [font-style:var(--poppins-regular-xs-font-style)]">
+                    Create Password
+                  </span>
+                </Label>
+
+                <div className="relative w-full">
+                  <Input
+                    id="password"
+                    data-testid="input-password"
+                    {...form.register("password")}
+                    type={showPassword ? "text" : "password"}
+                    className="h-14 px-3 py-2 bg-white rounded-lg border-[0.5px] border-solid border-[#868b90] pr-10"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2"
+                  >
+                    {showPassword ? (
+                      <EyeOffIcon className="w-4 h-4 text-gray-500" />
+                    ) : (
+                      <EyeIcon className="w-4 h-4 text-gray-500" />
+                    )}
+                  </button>
+                </div>
+              </div>
 
               <div className="flex-col h-[82px] items-start gap-1 px-0 py-px flex relative self-stretch w-full">
                 <Label
@@ -174,16 +266,19 @@ export const CreateAccount = (): JSX.Element => {
                   </span>
                 </Label>
 
-                <Select defaultValue="nigeria">
-                  <SelectTrigger className="h-14 px-3 py-2 bg-white rounded-lg border-[0.5px] border-solid border-[#868b90]">
+                <Select
+                  value={form.watch("country")}
+                  onValueChange={(value) => form.setValue("country", value)}
+                >
+                  <SelectTrigger data-testid="select-country" className="h-14 px-3 py-2 bg-white rounded-lg border-[0.5px] border-solid border-[#868b90]">
                     <SelectValue>
                       <span className="font-poppins-regular-body font-[number:var(--poppins-regular-body-font-weight)] text-[#041d0f] text-[length:var(--poppins-regular-body-font-size)] tracking-[var(--poppins-regular-body-letter-spacing)] leading-[var(--poppins-regular-body-line-height)] [font-style:var(--poppins-regular-body-font-style)]">
-                        Nigeria
+                        {form.watch("country")}
                       </span>
                     </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="nigeria">Nigeria</SelectItem>
+                    <SelectItem value="Nigeria">Nigeria</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -191,6 +286,9 @@ export const CreateAccount = (): JSX.Element => {
               <div className="inline-flex items-center gap-2 relative flex-[0_0_auto]">
                 <Checkbox
                   id="terms"
+                  data-testid="checkbox-terms"
+                  checked={agreedToTerms}
+                  onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
                   className="w-[18px] h-[18px] bg-white rounded border-[0.5px] border-solid border-[#868b90]"
                 />
 
@@ -216,9 +314,14 @@ export const CreateAccount = (): JSX.Element => {
             </div>
 
             <div className="flex flex-col items-start gap-4 relative self-stretch w-full flex-[0_0_auto]">
-              <Button className="flex items-center justify-center gap-2 p-3 relative self-stretch w-full flex-[0_0_auto] bg-[#493d9e] rounded-lg h-auto hover:bg-[#493d9e]/90">
+              <Button 
+                type="submit" 
+                data-testid="button-signup"
+                disabled={signupMutation.isPending}
+                className="flex items-center justify-center gap-2 p-3 relative self-stretch w-full flex-[0_0_auto] bg-[#493d9e] rounded-lg h-auto hover:bg-[#493d9e]/90"
+              >
                 <span className="relative w-fit mt-[-1.00px] font-poppins-regular-body font-[number:var(--poppins-regular-body-font-weight)] text-white text-[length:var(--poppins-regular-body-font-size)] tracking-[var(--poppins-regular-body-letter-spacing)] leading-[var(--poppins-regular-body-line-height)] whitespace-nowrap [font-style:var(--poppins-regular-body-font-style)]">
-                  Sign Up
+                  {signupMutation.isPending ? "Creating Account..." : "Sign Up"}
                 </span>
               </Button>
 
@@ -229,7 +332,11 @@ export const CreateAccount = (): JSX.Element => {
 
                 <span className="text-[#041d0f] leading-[17.5px]">&nbsp;</span>
 
-                <span className="text-[#493d9e] leading-[17.5px] cursor-pointer hover:underline">
+                <span 
+                  onClick={() => setLocation("/login")} 
+                  data-testid="link-login"
+                  className="text-[#493d9e] leading-[17.5px] cursor-pointer hover:underline"
+                >
                   Sign In
                 </span>
               </p>

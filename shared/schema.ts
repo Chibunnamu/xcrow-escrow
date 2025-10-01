@@ -50,7 +50,13 @@ export const insertTransactionSchema = createInsertSchema(transactions).pick({
   uniqueLink: true,
 });
 
+export const updateTransactionStatusSchema = z.object({
+  status: z.enum(transactionStatuses),
+  paystackReference: z.string().optional(),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
+export type UpdateTransactionStatus = z.infer<typeof updateTransactionStatusSchema>;

@@ -73,7 +73,51 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  private validateStateTransition(
+    currentStatus: TransactionStatus,
+    newStatus: TransactionStatus,
+    paystackReference?: string
+  ): { valid: boolean; error?: string } {
+    const transitions: Record<TransactionStatus, TransactionStatus[]> = {
+      pending: ["paid"],
+      paid: ["asset_transferred"],
+      asset_transferred: ["completed"],
+      completed: [],
+    };
+
+    if (!transitions[currentStatus].includes(newStatus)) {
+      return {
+        valid: false,
+        error: `Invalid transition from ${currentStatus} to ${newStatus}`,
+      };
+    }
+
+    if (newStatus === "paid" && !paystackReference) {
+      return {
+        valid: false,
+        error: "Payment reference required for paid status",
+      };
+    }
+
+    return { valid: true };
+  }
+
   async updateTransactionStatus(id: string, status: TransactionStatus, paystackReference?: string): Promise<Transaction | undefined> {
+    const transaction = await this.getTransaction(id);
+    if (!transaction) {
+      throw new Error("Transaction not found");
+    }
+
+    const validation = this.validateStateTransition(
+      transaction.status,
+      status,
+      paystackReference
+    );
+
+    if (!validation.valid) {
+      throw new Error(validation.error);
+    }
+
     const updateData: any = { status, updatedAt: new Date() };
     if (paystackReference) {
       updateData.paystackReference = paystackReference;
