@@ -143,6 +143,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/transactions/buyer/:buyerId", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user as User;
+      if (user.id !== req.params.buyerId) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      const transactions = await storage.getTransactionsByBuyer(req.params.buyerId);
+      res.json({ transactions });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   app.patch("/api/transactions/:id/status", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = req.user as User;
@@ -160,7 +173,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const isSeller = existingTransaction.sellerId === user.id;
-      const isBuyer = existingTransaction.buyerEmail === user.email;
+      const isBuyer = existingTransaction.buyerId === user.id;
 
       // Role-based authorization for state transitions
       if (result.data.status === "asset_transferred") {
