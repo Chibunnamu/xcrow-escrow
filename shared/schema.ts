@@ -32,6 +32,21 @@ export const transactions = pgTable("transactions", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const disputeStatuses = ["pending", "resolved", "closed"] as const;
+export type DisputeStatus = typeof disputeStatuses[number];
+
+export const disputes = pgTable("disputes", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  transactionId: varchar("transaction_id").notNull().references(() => transactions.id),
+  sellerId: varchar("seller_id").notNull().references(() => users.id),
+  reason: text("reason").notNull(),
+  description: text("description").notNull(),
+  evidence: text("evidence"),
+  status: text("status").notNull().default("pending").$type<DisputeStatus>(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
   password: true,
@@ -55,8 +70,23 @@ export const updateTransactionStatusSchema = z.object({
   paystackReference: z.string().optional(),
 });
 
+export const insertDisputeSchema = createInsertSchema(disputes).pick({
+  transactionId: true,
+  sellerId: true,
+  reason: true,
+  description: true,
+  evidence: true,
+});
+
+export const updateDisputeStatusSchema = z.object({
+  status: z.enum(disputeStatuses),
+});
+
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type InsertTransaction = z.infer<typeof insertTransactionSchema>;
 export type Transaction = typeof transactions.$inferSelect;
 export type UpdateTransactionStatus = z.infer<typeof updateTransactionStatusSchema>;
+export type InsertDispute = z.infer<typeof insertDisputeSchema>;
+export type Dispute = typeof disputes.$inferSelect;
+export type UpdateDisputeStatus = z.infer<typeof updateDisputeStatusSchema>;
