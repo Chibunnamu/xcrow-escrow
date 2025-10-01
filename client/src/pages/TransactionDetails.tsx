@@ -138,7 +138,7 @@ export const TransactionDetails = (): JSX.Element => {
             </div>
 
             <div className="flex gap-4">
-              {isBuyer && transaction.status === "pending" && (
+              {transaction.status === "pending" && (
                 <Button
                   onClick={() => setLocation(`/payment/${transaction.id}`)}
                   data-testid="button-pay-now"
