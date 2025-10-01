@@ -26,8 +26,8 @@ function Router() {
       
       {/* Transaction pages */}
       <Route path="/transaction/:link" component={TransactionDetails} />
-      <Route path="/payment/:transactionId" component={PaymentPage} />
-      <Route path="/buyer-confirm/:transactionId" component={BuyerConfirmation} />
+      <Route path="/payment/:link" component={PaymentPage} />
+      <Route path="/buyer-confirm/:link" component={BuyerConfirmation} />
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />

@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 
 export const PaymentPage = (): JSX.Element => {
-  const [, params] = useRoute("/payment/:transactionId");
+  const [, params] = useRoute("/payment/:link");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -18,15 +18,15 @@ export const PaymentPage = (): JSX.Element => {
   });
 
   const { data: transactionData, isLoading } = useQuery<{ transaction: Transaction } | null>({
-    queryKey: ["/api/transactions", params?.transactionId],
-    enabled: !!params?.transactionId,
+    queryKey: ["/api/transactions", params?.link],
+    enabled: !!params?.link,
   });
 
   const transaction = transactionData?.transaction;
 
   const initializePaymentMutation = useMutation({
-    mutationFn: async (transactionId: string) => {
-      const res = await apiRequest("POST", "/api/payments/initialize", { transactionId });
+    mutationFn: async (uniqueLink: string) => {
+      const res = await apiRequest("POST", "/api/payments/initialize", { uniqueLink });
       return await res.json();
     },
     onSuccess: (data: { authorization_url: string; reference: string }) => {
@@ -128,7 +128,7 @@ export const PaymentPage = (): JSX.Element => {
                 Cancel
               </Button>
               <Button
-                onClick={() => initializePaymentMutation.mutate(transaction.id)}
+                onClick={() => initializePaymentMutation.mutate(transaction.uniqueLink)}
                 disabled={initializePaymentMutation.isPending}
                 data-testid="button-proceed"
                 className="flex-1 bg-[#493d9e] hover:bg-[#493d9e]/90"

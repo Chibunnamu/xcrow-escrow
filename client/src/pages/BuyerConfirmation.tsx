@@ -8,7 +8,7 @@ import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export const BuyerConfirmation = (): JSX.Element => {
-  const [, params] = useRoute("/buyer-confirm/:transactionId");
+  const [, params] = useRoute("/buyer-confirm/:link");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -17,8 +17,8 @@ export const BuyerConfirmation = (): JSX.Element => {
   });
 
   const { data: transactionData, isLoading } = useQuery<{ transaction: Transaction } | null>({
-    queryKey: ["/api/transactions", params?.transactionId],
-    enabled: !!params?.transactionId,
+    queryKey: ["/api/transactions", params?.link],
+    enabled: !!params?.link,
   });
 
   const transaction = transactionData?.transaction;

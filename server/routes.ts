@@ -192,15 +192,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Payment routes
-  app.post("/api/payments/initialize", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+  app.post("/api/payments/initialize", async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const { transactionId } = req.body;
+      const { uniqueLink } = req.body;
       
-      if (!transactionId) {
-        return res.status(400).json({ message: "Transaction ID is required" });
+      if (!uniqueLink) {
+        return res.status(400).json({ message: "Transaction link is required" });
       }
 
-      const transaction = await storage.getTransaction(transactionId);
+      const transaction = await storage.getTransactionByLink(uniqueLink);
       if (!transaction) {
         return res.status(404).json({ message: "Transaction not found" });
       }

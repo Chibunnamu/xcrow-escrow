@@ -140,7 +140,7 @@ export const TransactionDetails = (): JSX.Element => {
             <div className="flex gap-4">
               {transaction.status === "pending" && (
                 <Button
-                  onClick={() => setLocation(`/payment/${transaction.id}`)}
+                  onClick={() => setLocation(`/payment/${transaction.uniqueLink}`)}
                   data-testid="button-pay-now"
                   className="bg-[#493d9e] hover:bg-[#493d9e]/90"
                 >
@@ -150,7 +150,7 @@ export const TransactionDetails = (): JSX.Element => {
 
               {isBuyer && transaction.status === "asset_transferred" && (
                 <Button
-                  onClick={() => setLocation(`/buyer-confirm/${transaction.id}`)}
+                  onClick={() => setLocation(`/buyer-confirm/${transaction.uniqueLink}`)}
                   data-testid="button-confirm-receipt"
                   className="bg-green-600 hover:bg-green-700"
                 >
