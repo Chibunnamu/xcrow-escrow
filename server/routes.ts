@@ -191,6 +191,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.post("/api/transactions/:id/accept", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user as User;
+      
+      // Get the transaction
+      const existingTransaction = await storage.getTransaction(req.params.id);
+      if (!existingTransaction) {
+        return res.status(404).json({ message: "Transaction not found" });
+      }
+
+      // Check if transaction is still pending and not already accepted
+      if (existingTransaction.status !== "pending") {
+        return res.status(400).json({ message: "Transaction is no longer pending" });
+      }
+
+      if (existingTransaction.buyerId) {
+        return res.status(400).json({ message: "Transaction already accepted by another buyer" });
+      }
+
+      // Check if the seller is trying to accept their own transaction
+      if (existingTransaction.sellerId === user.id) {
+        return res.status(403).json({ message: "You cannot accept your own transaction" });
+      }
+
+      // Link the buyer to the transaction
+      const transaction = await storage.acceptTransaction(req.params.id, user.id);
+      
+      res.json({ transaction });
+    } catch (error) {
+      next(error);
+    }
+  });
+
   // Payment routes
   app.post("/api/payments/initialize", async (req: Request, res: Response, next: NextFunction) => {
     try {

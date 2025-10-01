@@ -1,19 +1,21 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation, useRoute } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { type Transaction } from "@shared/schema";
 import { Loader2, Copy, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
+import { TransactionAcceptDialog } from "@/components/TransactionAcceptDialog";
 
 export const TransactionDetails = (): JSX.Element => {
   const [, params] = useRoute("/transaction/:link");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
+  const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
 
   const { data: userData } = useQuery<{ user: any } | null>({
     queryKey: ["/api/user"],
@@ -25,8 +27,47 @@ export const TransactionDetails = (): JSX.Element => {
   });
 
   const transaction = transactionData?.transaction;
-  const isBuyer = transaction && userData?.user?.email === transaction.buyerEmail;
+  const isBuyer = transaction && (userData?.user?.id === transaction.buyerId || userData?.user?.email === transaction.buyerEmail);
   const isSeller = transaction && userData?.user?.id === transaction.sellerId;
+
+  const acceptTransactionMutation = useMutation({
+    mutationFn: async () => {
+      if (!transaction) throw new Error("No transaction");
+      const response = await apiRequest("POST", `/api/transactions/${transaction.id}/accept`);
+      return response.json();
+    },
+    onSuccess: () => {
+      setAcceptDialogOpen(false);
+      setLocation(`/payment/${transaction?.uniqueLink}`);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleProceedToPayment = () => {
+    if (!userData?.user) {
+      setLocation(`/?redirect=/transaction/${params?.link}`);
+      return;
+    }
+    setAcceptDialogOpen(true);
+  };
+
+  const handleAcceptTransaction = () => {
+    acceptTransactionMutation.mutate();
+  };
+
+  const handleDeclineTransaction = () => {
+    setAcceptDialogOpen(false);
+    toast({
+      title: "Transaction declined",
+      description: "You have declined this transaction",
+    });
+  };
 
   const copyLink = () => {
     const link = window.location.href;
@@ -138,13 +179,13 @@ export const TransactionDetails = (): JSX.Element => {
             </div>
 
             <div className="flex gap-4">
-              {transaction.status === "pending" && (
+              {transaction.status === "pending" && !transaction.buyerId && (
                 <Button
-                  onClick={() => setLocation(`/payment/${transaction.uniqueLink}`)}
-                  data-testid="button-pay-now"
+                  onClick={handleProceedToPayment}
+                  data-testid="button-proceed-payment"
                   className="bg-[#493d9e] hover:bg-[#493d9e]/90"
                 >
-                  Pay Now
+                  Proceed to Payment
                 </Button>
               )}
 
@@ -170,6 +211,15 @@ export const TransactionDetails = (): JSX.Element => {
             </div>
           </CardContent>
         </Card>
+
+        <TransactionAcceptDialog
+          open={acceptDialogOpen}
+          onOpenChange={setAcceptDialogOpen}
+          transaction={transaction}
+          sellerName={`${userData?.user?.firstName || ''} ${userData?.user?.lastName || ''}`.trim()}
+          onAccept={handleAcceptTransaction}
+          onDecline={handleDeclineTransaction}
+        />
       </div>
     </div>
   );
