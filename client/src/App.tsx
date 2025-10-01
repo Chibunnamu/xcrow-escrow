@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
+import { DashboardLayout } from "@/components/DashboardLayout";
 
 import { CreateAccount } from "@/pages/CreateAccount";
 import { Login } from "@/pages/Login";
@@ -20,9 +21,17 @@ function Router() {
       <Route path="/" component={CreateAccount} />
       <Route path="/login" component={Login} />
       
-      {/* Seller pages */}
-      <Route path="/seller-dashboard" component={SellerDashboard} />
-      <Route path="/create-transaction" component={CreateTransaction} />
+      {/* Seller pages with dashboard layout */}
+      <Route path="/seller-dashboard">
+        <DashboardLayout>
+          <SellerDashboard />
+        </DashboardLayout>
+      </Route>
+      <Route path="/create-transaction">
+        <DashboardLayout>
+          <CreateTransaction />
+        </DashboardLayout>
+      </Route>
       
       {/* Transaction pages */}
       <Route path="/transaction/:link" component={TransactionDetails} />
