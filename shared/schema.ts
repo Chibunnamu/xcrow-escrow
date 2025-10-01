@@ -92,7 +92,7 @@ export type PayoutStatus = typeof payoutStatuses[number];
 
 export const payouts = pgTable("payouts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  transactionId: varchar("transaction_id").notNull().references(() => transactions.id),
+  transactionId: varchar("transaction_id").notNull().unique().references(() => transactions.id),
   sellerId: varchar("seller_id").notNull().references(() => users.id),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
   status: text("status").notNull().default("pending").$type<PayoutStatus>(),
