@@ -32,7 +32,7 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps): JSX.Element
     <SidebarProvider>
       <AppSidebar user={userData.user} />
       <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-white px-4 md:hidden">
+        <header className="sticky top-0 z-10 flex h-14 items-center justify-between border-b bg-white px-4 md:hidden">
           <SidebarTrigger className="h-10 w-10">
             <Menu className="h-5 w-5" />
             <span className="sr-only">Toggle menu</span>
@@ -42,6 +42,11 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps): JSX.Element
               <span className="text-white font-bold text-xs">X</span>
             </div>
             <span className="text-lg font-bold text-[#041d0f]">XCROW</span>
+          </div>
+          <div className="w-8 h-8 rounded-full bg-[#493d9e] flex items-center justify-center">
+            <span className="text-white font-semibold text-xs">
+              {userData.user.name?.charAt(0) || userData.user.email.charAt(0).toUpperCase()}
+            </span>
           </div>
         </header>
         <main className="flex-1 overflow-y-auto bg-gray-50">
