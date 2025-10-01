@@ -72,8 +72,13 @@ export function setupAuth(app: Express) {
   passport.deserializeUser(async (data: any, done) => {
     try {
       if (data.type === 'oauth') {
-        // OAuth user - return the OAuth session data
-        done(null, data.data);
+        // OAuth user - fetch the database user using the OAuth sub
+        const oauthSub = data.data.claims.sub;
+        const user = await storage.getUserByOAuthSub(oauthSub);
+        if (!user) {
+          return done(new Error('OAuth user not found in database'));
+        }
+        done(null, user);
       } else {
         // Local user - fetch from database
         const user = await storage.getUser(data.id);
