@@ -1,4 +1,4 @@
-import { type User, type InsertUser, type Transaction, type InsertTransaction, users, transactions, type TransactionStatus } from "@shared/schema";
+import { type User, type InsertUser, type Transaction, type InsertTransaction, type Dispute, type InsertDispute, users, transactions, disputes, type TransactionStatus, type DisputeStatus } from "@shared/schema";
 import { drizzle } from "drizzle-orm/node-postgres";
 import { eq } from "drizzle-orm";
 import { Pool } from "pg";
@@ -26,6 +26,13 @@ export interface IStorage {
   getTransactionsBySeller(sellerId: string): Promise<Transaction[]>;
   createTransaction(transaction: InsertTransaction): Promise<Transaction>;
   updateTransactionStatus(id: string, status: TransactionStatus, paystackReference?: string): Promise<Transaction | undefined>;
+  
+  // Dispute methods
+  getDispute(id: string): Promise<Dispute | undefined>;
+  getDisputesBySeller(sellerId: string): Promise<Dispute[]>;
+  getDisputeByTransaction(transactionId: string): Promise<Dispute | undefined>;
+  createDispute(dispute: InsertDispute): Promise<Dispute>;
+  updateDisputeStatus(id: string, status: DisputeStatus): Promise<Dispute | undefined>;
   
   // Statistics methods
   getDashboardStats(sellerId: string): Promise<{
@@ -142,6 +149,34 @@ export class DatabaseStorage implements IStorage {
     const result = await db.update(transactions)
       .set(updateData)
       .where(eq(transactions.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Dispute methods
+  async getDispute(id: string): Promise<Dispute | undefined> {
+    const result = await db.select().from(disputes).where(eq(disputes.id, id)).limit(1);
+    return result[0];
+  }
+
+  async getDisputesBySeller(sellerId: string): Promise<Dispute[]> {
+    return await db.select().from(disputes).where(eq(disputes.sellerId, sellerId));
+  }
+
+  async getDisputeByTransaction(transactionId: string): Promise<Dispute | undefined> {
+    const result = await db.select().from(disputes).where(eq(disputes.transactionId, transactionId)).limit(1);
+    return result[0];
+  }
+
+  async createDispute(insertDispute: InsertDispute): Promise<Dispute> {
+    const result = await db.insert(disputes).values(insertDispute).returning();
+    return result[0];
+  }
+
+  async updateDisputeStatus(id: string, status: DisputeStatus): Promise<Dispute | undefined> {
+    const result = await db.update(disputes)
+      .set({ status, updatedAt: new Date() })
+      .where(eq(disputes.id, id))
       .returning();
     return result[0];
   }
