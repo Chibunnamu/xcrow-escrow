@@ -20,6 +20,7 @@ export type TransactionStatus = typeof transactionStatuses[number];
 export const transactions = pgTable("transactions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   sellerId: varchar("seller_id").notNull().references(() => users.id),
+  buyerId: varchar("buyer_id").references(() => users.id),
   buyerEmail: text("buyer_email").notNull(),
   itemName: text("item_name").notNull(),
   itemDescription: text("item_description").notNull(),
