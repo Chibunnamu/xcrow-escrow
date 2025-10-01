@@ -1,8 +1,9 @@
 import { useLocation } from "wouter";
-import { Home, Building2, Store, Bell, Settings, HelpCircle } from "lucide-react";
+import { Home, Building2, Store, Bell, Settings, HelpCircle, LogOut } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useMutation } from "@tanstack/react-query";
 
 interface SidebarProps {
   user: {
@@ -13,6 +14,22 @@ interface SidebarProps {
 
 export const Sidebar = ({ user }: SidebarProps): JSX.Element => {
   const [location, setLocation] = useLocation();
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      const response = await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      if (!response.ok) {
+        throw new Error("Logout failed");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      window.location.href = "/";
+    },
+  });
 
   const menuItems = [
     { icon: Home, label: "Dashboard", path: "/seller-dashboard", badge: null },
@@ -103,7 +120,7 @@ export const Sidebar = ({ user }: SidebarProps): JSX.Element => {
 
       {/* User Profile */}
       <div className="p-4 border-t border-gray-200">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 mb-3">
           <div className="w-10 h-10 rounded-full bg-[#493d9e] flex items-center justify-center">
             <span className="text-white font-semibold text-sm">
               {user.name?.charAt(0) || user.email.charAt(0).toUpperCase()}
@@ -116,6 +133,15 @@ export const Sidebar = ({ user }: SidebarProps): JSX.Element => {
             <p className="text-xs text-gray-500 truncate">{user.email}</p>
           </div>
         </div>
+        <Button
+          onClick={() => logoutMutation.mutate()}
+          disabled={logoutMutation.isPending}
+          variant="outline"
+          className="w-full justify-start gap-2 text-gray-700 hover:text-red-600 hover:border-red-300"
+        >
+          <LogOut className="w-4 h-4" />
+          {logoutMutation.isPending ? "Signing out..." : "Sign Out"}
+        </Button>
       </div>
     </div>
   );
