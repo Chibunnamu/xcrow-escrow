@@ -3,9 +3,10 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { isAuthenticated } from "./auth";
 import passport from "passport";
-import { insertUserSchema, insertTransactionSchema, updateTransactionStatusSchema, insertDisputeSchema, updateDisputeStatusSchema, type User } from "@shared/schema";
+import { insertUserSchema, insertTransactionSchema, updateTransactionStatusSchema, insertDisputeSchema, updateDisputeStatusSchema, updateBankAccountSchema, type User } from "@shared/schema";
 import { randomBytes } from "crypto";
 import { initializePayment, verifyPayment, validatePaystackWebhook } from "./paystack";
+import { listBanks, verifyAccountNumber, createTransferRecipient, initiateTransfer } from "./transfer";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
@@ -197,6 +198,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
         result.data.status, 
         result.data.paystackReference
       );
+      
+      // If transaction is completed, initiate payout to seller
+      if (result.data.status === "completed") {
+        try {
+          const seller = await storage.getUser(existingTransaction.sellerId);
+          
+          if (!seller) {
+            console.error("Seller not found for transaction:", req.params.id);
+          } else if (!seller.recipientCode) {
+            console.log("Seller has no bank account configured, payout skipped for transaction:", req.params.id);
+          } else {
+            const payoutAmount = (parseFloat(existingTransaction.price) - parseFloat(existingTransaction.commission)).toFixed(2);
+            
+            const payout = await storage.createPayout(
+              req.params.id,
+              existingTransaction.sellerId,
+              payoutAmount
+            );
+            
+            try {
+              const transferReference = `PAYOUT-${payout.id}-${Date.now()}`;
+              const transferData = await initiateTransfer(
+                seller.recipientCode,
+                parseFloat(payoutAmount),
+                transferReference,
+                `Payout for transaction ${existingTransaction.itemName}`
+              );
+              
+              await storage.updatePayoutStatus(
+                payout.id,
+                "success",
+                transferData.data.transfer_code,
+                transferData.data.reference
+              );
+            } catch (transferError: any) {
+              console.error("Transfer initiation failed:", transferError);
+              await storage.updatePayoutStatus(
+                payout.id,
+                "failed",
+                undefined,
+                undefined,
+                transferError.message || "Transfer initiation failed"
+              );
+            }
+          }
+        } catch (payoutError: any) {
+          console.error("Payout processing error:", payoutError);
+        }
+      }
       
       res.json({ transaction });
     } catch (error) {
@@ -462,6 +512,79 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json({ transactions: filtered });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Bank account routes
+  app.get("/api/banks", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const banksData = await listBanks();
+      res.json({ banks: banksData.data });
+    } catch (error: any) {
+      next(error);
+    }
+  });
+
+  app.post("/api/bank-account/verify", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { accountNumber, bankCode } = req.body;
+      
+      if (!accountNumber || !bankCode) {
+        return res.status(400).json({ message: "Account number and bank code are required" });
+      }
+
+      const verificationData = await verifyAccountNumber(accountNumber, bankCode);
+      res.json({ 
+        accountName: verificationData.data.account_name,
+        accountNumber: verificationData.data.account_number,
+      });
+    } catch (error: any) {
+      next(error);
+    }
+  });
+
+  app.post("/api/bank-account", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user as User;
+      
+      const result = updateBankAccountSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid input", errors: result.error.errors });
+      }
+
+      const { bankCode, accountNumber, accountName } = result.data;
+
+      const verificationData = await verifyAccountNumber(accountNumber, bankCode);
+      
+      if (verificationData.data.account_name.toLowerCase() !== accountName.toLowerCase()) {
+        return res.status(400).json({ message: "Account name does not match bank records" });
+      }
+
+      const recipientData = await createTransferRecipient(accountName, accountNumber, bankCode);
+
+      const updatedUser = await storage.updateUserBankAccount(
+        user.id,
+        bankCode,
+        accountNumber,
+        accountName,
+        recipientData.data.recipient_code
+      );
+
+      const { password, ...userWithoutPassword } = updatedUser!;
+      res.json({ user: userWithoutPassword });
+    } catch (error: any) {
+      next(error);
+    }
+  });
+
+  // Payout routes
+  app.get("/api/payouts", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user as User;
+      const payouts = await storage.getPayoutsBySeller(user.id);
+      res.json({ payouts });
     } catch (error) {
       next(error);
     }
