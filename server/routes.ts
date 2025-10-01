@@ -3,7 +3,7 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { isAuthenticated } from "./auth";
 import passport from "passport";
-import { insertUserSchema, insertTransactionSchema, updateTransactionStatusSchema, type User } from "@shared/schema";
+import { insertUserSchema, insertTransactionSchema, updateTransactionStatusSchema, insertDisputeSchema, updateDisputeStatusSchema, type User } from "@shared/schema";
 import { randomBytes } from "crypto";
 import { initializePayment, verifyPayment, validatePaystackWebhook } from "./paystack";
 
@@ -401,6 +401,106 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       res.json({ transactions: filtered });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  // Dispute routes
+  app.post("/api/disputes", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user as User;
+      
+      const disputeData = {
+        ...req.body,
+        sellerId: user.id,
+      };
+
+      const result = insertDisputeSchema.safeParse(disputeData);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid input", errors: result.error.errors });
+      }
+
+      // Check if transaction exists and belongs to user
+      const transaction = await storage.getTransaction(result.data.transactionId);
+      if (!transaction) {
+        return res.status(404).json({ message: "Transaction not found" });
+      }
+      if (transaction.sellerId !== user.id) {
+        return res.status(403).json({ message: "Forbidden: You can only dispute your own transactions" });
+      }
+
+      // Check if dispute already exists for this transaction
+      const existingDispute = await storage.getDisputeByTransaction(result.data.transactionId);
+      if (existingDispute) {
+        return res.status(400).json({ message: "A dispute already exists for this transaction" });
+      }
+
+      const dispute = await storage.createDispute(result.data);
+      res.status(201).json({ dispute });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/disputes", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user as User;
+      const disputes = await storage.getDisputesBySeller(user.id);
+      
+      // Apply optional status filter
+      const { status } = req.query;
+      
+      let filtered = disputes;
+      if (status && status !== "all") {
+        filtered = filtered.filter(d => d.status === status);
+      }
+      
+      res.json({ disputes: filtered });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.get("/api/disputes/:id", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user as User;
+      const dispute = await storage.getDispute(req.params.id);
+      
+      if (!dispute) {
+        return res.status(404).json({ message: "Dispute not found" });
+      }
+      
+      if (dispute.sellerId !== user.id) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+      
+      res.json({ dispute });
+    } catch (error) {
+      next(error);
+    }
+  });
+
+  app.patch("/api/disputes/:id/status", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user as User;
+      
+      const result = updateDisputeStatusSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid input", errors: result.error.errors });
+      }
+
+      const dispute = await storage.getDispute(req.params.id);
+      if (!dispute) {
+        return res.status(404).json({ message: "Dispute not found" });
+      }
+      
+      if (dispute.sellerId !== user.id) {
+        return res.status(403).json({ message: "Forbidden" });
+      }
+
+      const updatedDispute = await storage.updateDisputeStatus(req.params.id, result.data.status);
+      res.json({ dispute: updatedDispute });
     } catch (error) {
       next(error);
     }
