@@ -95,20 +95,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
-    const userData = req.user as any;
-    
-    // Check if this is an OAuth user
-    if (userData.claims) {
-      const userId = userData.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
-      const { password, ...userWithoutPassword } = user;
-      return res.json({ user: userWithoutPassword });
-    }
-    
-    // Local user
+    // Both OAuth and local users now have a proper User object from deserialize
     const { password, ...userWithoutPassword } = req.user as User;
     res.json({ user: userWithoutPassword });
   });

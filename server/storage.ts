@@ -18,6 +18,7 @@ export interface IStorage {
   // User methods
   getUser(id: string): Promise<User | undefined>;
   getUserByEmail(email: string): Promise<User | undefined>;
+  getUserByOAuthSub(oauthSub: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   upsertUser(user: UpsertUser): Promise<User>;
   
@@ -77,6 +78,11 @@ export class DatabaseStorage implements IStorage {
     return result[0];
   }
 
+  async getUserByOAuthSub(oauthSub: string): Promise<User | undefined> {
+    const result = await db.select().from(users).where(eq(users.oauthSub, oauthSub)).limit(1);
+    return result[0];
+  }
+
   async createUser(insertUser: InsertUser): Promise<User> {
     const hashedPassword = await hashPassword(insertUser.password);
     const result = await db.insert(users).values({
@@ -87,16 +93,48 @@ export class DatabaseStorage implements IStorage {
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
+    // Check if a user with this OAuth sub already exists
+    const existingOAuthUser = await this.getUserByOAuthSub(userData.oauthSub);
+    if (existingOAuthUser) {
+      // OAuth user exists - update their record
+      const [updatedUser] = await db
+        .update(users)
+        .set({
+          email: userData.email || existingOAuthUser.email,
+          profileImageUrl: userData.profileImageUrl,
+          firstName: userData.firstName || existingOAuthUser.firstName,
+          lastName: userData.lastName || existingOAuthUser.lastName,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.oauthSub, userData.oauthSub))
+        .returning();
+      return updatedUser;
+    }
+
+    // Check if a user with this email already exists (email/password user)
+    if (userData.email) {
+      const existingEmailUser = await this.getUserByEmail(userData.email);
+      if (existingEmailUser) {
+        // User exists with this email - link OAuth to existing account
+        const [updatedUser] = await db
+          .update(users)
+          .set({
+            oauthSub: userData.oauthSub,
+            profileImageUrl: userData.profileImageUrl,
+            firstName: userData.firstName || existingEmailUser.firstName,
+            lastName: userData.lastName || existingEmailUser.lastName,
+            updatedAt: new Date(),
+          })
+          .where(eq(users.email, userData.email))
+          .returning();
+        return updatedUser;
+      }
+    }
+
+    // No existing user - insert new OAuth user with generated UUID id
     const [user] = await db
       .insert(users)
       .values(userData)
-      .onConflictDoUpdate({
-        target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
-      })
       .returning();
     return user;
   }
