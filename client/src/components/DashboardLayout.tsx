@@ -1,7 +1,9 @@
-import { Sidebar } from "./Sidebar";
+import { AppSidebar } from "./AppSidebar";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Loader2 } from "lucide-react";
+import { Loader2, Menu } from "lucide-react";
+import { SidebarProvider, SidebarTrigger, SidebarInset } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -28,11 +30,27 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps): JSX.Element
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <Sidebar user={userData.user} />
-      <main className="flex-1 overflow-y-auto bg-gray-50">
-        {children}
-      </main>
-    </div>
+    <SidebarProvider>
+      <AppSidebar user={userData.user} />
+      <SidebarInset>
+        <header className="sticky top-0 z-10 flex h-14 items-center gap-4 border-b bg-white px-4 md:hidden">
+          <SidebarTrigger>
+            <Button variant="ghost" size="icon">
+              <Menu className="h-5 w-5" />
+              <span className="sr-only">Toggle menu</span>
+            </Button>
+          </SidebarTrigger>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 rounded-lg bg-[#493d9e] flex items-center justify-center">
+              <span className="text-white font-bold text-xs">X</span>
+            </div>
+            <span className="text-lg font-bold text-[#041d0f]">XCROW</span>
+          </div>
+        </header>
+        <main className="flex-1 overflow-y-auto bg-gray-50">
+          {children}
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
   );
 };
