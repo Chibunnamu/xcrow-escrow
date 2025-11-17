@@ -16,6 +16,12 @@
       "dest": "/dist/public/index.html"
     }
   ],
+  "rewrites": [
+    {
+      "source": "/((?!api/).*)",
+      "destination": "/dist/public/index.html"
+    }
+  ],
   "env": {
     "NODE_ENV": "production"
   }
