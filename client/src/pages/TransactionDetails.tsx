@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useQuery, useMutation } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useRoute } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { type Transaction } from "@shared/schema";
@@ -11,9 +11,10 @@ import { useState } from "react";
 import { TransactionAcceptDialog } from "@/components/TransactionAcceptDialog";
 
 export const TransactionDetails = (): JSX.Element => {
-  const [, params] = useRoute("/transaction/:link");
+  const [, params] = useRoute("/transaction/:id");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const [copied, setCopied] = useState(false);
   const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
 
@@ -22,8 +23,8 @@ export const TransactionDetails = (): JSX.Element => {
   });
 
   const { data: transactionData, isLoading } = useQuery<{ transaction: Transaction } | null>({
-    queryKey: ["/api/transactions", params?.link],
-    enabled: !!params?.link,
+    queryKey: ["/api/transactions/id", params?.id],
+    enabled: !!params?.id,
   });
 
   const transaction = transactionData?.transaction;
@@ -36,9 +37,79 @@ export const TransactionDetails = (): JSX.Element => {
       const response = await apiRequest("POST", `/api/transactions/${transaction.id}/accept`);
       return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       setAcceptDialogOpen(false);
-      setLocation(`/payment/${transaction?.uniqueLink}`);
+      // Invalidate and refetch the transaction data to get updated status
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions/id", params?.id] });
+      toast({
+        title: "Transaction accepted",
+        description: "Redirecting to payment...",
+      });
+      // Navigate to payment page after successful acceptance
+      setTimeout(() => {
+        setLocation(`/payment/${transaction?.id}`);
+      }, 1000);
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const initializePaymentMutation = useMutation({
+    mutationFn: async () => {
+      if (!transaction) throw new Error("No transaction");
+      const res = await apiRequest("POST", "/api/payments/initialize", { transactionId: transaction.id });
+      return await res.json();
+    },
+    onSuccess: (data: { authorization_url: string; reference: string }) => {
+      window.location.href = data.authorization_url;
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Payment initialization failed",
+        description: error.message || "Unable to start payment",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const cancelTransactionMutation = useMutation({
+    mutationFn: async () => {
+      if (!transaction) throw new Error("No transaction");
+      const response = await apiRequest("POST", `/api/transactions/${transaction.id}/cancel`);
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Transaction cancelled",
+        description: "The transaction has been cancelled",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
+
+  const markAsTransferredMutation = useMutation({
+    mutationFn: async () => {
+      if (!transaction) throw new Error("No transaction");
+      const response = await apiRequest("POST", `/api/transactions/${transaction.id}/mark-transferred`);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions/id", params?.id] });
+      toast({
+        title: "Asset marked as transferred",
+        description: "The buyer can now confirm receipt",
+      });
     },
     onError: (error: Error) => {
       toast({
@@ -51,10 +122,16 @@ export const TransactionDetails = (): JSX.Element => {
 
   const handleProceedToPayment = () => {
     if (!userData?.user) {
-      setLocation(`/login?redirect=/transaction/${params?.link}`);
+      setLocation(`/login?redirect=/transaction/${params?.id}`);
       return;
     }
-    setAcceptDialogOpen(true);
+    if (transaction?.buyerId) {
+      // Transaction already accepted, proceed directly to payment
+      initializePaymentMutation.mutate();
+    } else {
+      // Need to accept transaction first
+      setAcceptDialogOpen(true);
+    }
   };
 
   const handleAcceptTransaction = () => {
@@ -67,6 +144,14 @@ export const TransactionDetails = (): JSX.Element => {
       title: "Transaction declined",
       description: "You have declined this transaction",
     });
+  };
+
+  const handleCancelTransaction = () => {
+    cancelTransactionMutation.mutate();
+  };
+
+  const handleMarkAsTransferred = () => {
+    markAsTransferredMutation.mutate();
   };
 
   const copyLink = () => {
@@ -86,6 +171,7 @@ export const TransactionDetails = (): JSX.Element => {
       paid: "default",
       asset_transferred: "outline",
       completed: "default",
+      cancelled: "destructive",
     };
     return (
       <Badge variant={variants[status] || "default"} data-testid={`status-${status}`}>
@@ -175,27 +261,72 @@ export const TransactionDetails = (): JSX.Element => {
                 {transaction.status === "paid" && "Payment received. Seller should transfer the asset"}
                 {transaction.status === "asset_transferred" && "Asset transferred. Buyer should confirm receipt"}
                 {transaction.status === "completed" && "Transaction completed successfully"}
+                {transaction.status === "cancelled" && "Transaction has been cancelled"}
               </p>
             </div>
 
             <div className="flex gap-4">
-              {transaction.status === "pending" && !transaction.buyerId && (
-                <Button
-                  onClick={handleProceedToPayment}
-                  data-testid="button-proceed-payment"
-                  className="bg-[#493d9e] hover:bg-[#493d9e]/90"
-                >
-                  Proceed to Payment
-                </Button>
+              {(transaction.status === "pending" || transaction.status === "active") && isBuyer && (
+                <>
+                  <Button
+                    onClick={handleProceedToPayment}
+                    disabled={acceptTransactionMutation.isPending || initializePaymentMutation.isPending}
+                    data-testid="button-proceed-payment"
+                    className="bg-[#493d9e] hover:bg-[#493d9e]/90"
+                  >
+                    {acceptTransactionMutation.isPending || initializePaymentMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        {acceptTransactionMutation.isPending ? "Accepting..." : "Initializing Payment..."}
+                      </>
+                    ) : (
+                      transaction.buyerId ? "Proceed to Payment" : "Accept & Pay"
+                    )}
+                  </Button>
+                  <Button
+                    onClick={handleCancelTransaction}
+                    disabled={cancelTransactionMutation.isPending}
+                    variant="outline"
+                    data-testid="button-cancel-transaction"
+                    className="border-red-500 text-red-500 hover:bg-red-50"
+                  >
+                    {cancelTransactionMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Cancelling...
+                      </>
+                    ) : (
+                      "Cancel Transaction"
+                    )}
+                  </Button>
+                </>
               )}
 
               {isBuyer && transaction.status === "asset_transferred" && (
                 <Button
-                  onClick={() => setLocation(`/buyer-confirm/${transaction.uniqueLink}`)}
+                  onClick={() => setLocation(`/buyer-confirm/${transaction.id}`)}
                   data-testid="button-confirm-receipt"
                   className="bg-green-600 hover:bg-green-700"
                 >
                   Confirm Receipt
+                </Button>
+              )}
+
+              {isSeller && transaction.status === "paid" && (
+                <Button
+                  onClick={handleMarkAsTransferred}
+                  disabled={markAsTransferredMutation.isPending}
+                  data-testid="button-mark-transferred"
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  {markAsTransferredMutation.isPending ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Marking...
+                    </>
+                  ) : (
+                    "Mark as Transferred"
+                  )}
                 </Button>
               )}
 

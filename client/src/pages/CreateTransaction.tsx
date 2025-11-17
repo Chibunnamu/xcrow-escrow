@@ -47,8 +47,11 @@ export const CreateTransaction = (): JSX.Element => {
         title: "Transaction created",
         description: "Share the link with your buyer",
       });
+      // Invalidate both seller transactions and the specific transaction query
       queryClient.invalidateQueries({ queryKey: ["/api/transactions/seller"] });
-      setLocation(`/transaction/${response.transaction.uniqueLink}`);
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions/id", response.transaction.id] });
+      // Stay on the transaction details page to show the link and allow copying
+      setLocation(`/transaction/${response.transaction.id}`);
     },
     onError: (error: any) => {
       toast({

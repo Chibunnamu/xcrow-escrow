@@ -8,7 +8,7 @@ import { Loader2, CheckCircle2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 export const BuyerConfirmation = (): JSX.Element => {
-  const [, params] = useRoute("/buyer-confirm/:link");
+  const [, params] = useRoute("/buyer-confirm/:id");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
@@ -17,8 +17,8 @@ export const BuyerConfirmation = (): JSX.Element => {
   });
 
   const { data: transactionData, isLoading } = useQuery<{ transaction: Transaction } | null>({
-    queryKey: ["/api/transactions", params?.link],
-    enabled: !!params?.link,
+    queryKey: ["/api/transactions/id", params?.id],
+    enabled: !!params?.id,
   });
 
   const transaction = transactionData?.transaction;
@@ -34,8 +34,8 @@ export const BuyerConfirmation = (): JSX.Element => {
         title: "Transaction completed",
         description: "Funds have been released to the seller",
       });
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions"] });
-      setLocation(`/transaction/${transaction?.uniqueLink}`);
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions/id", transaction?.id] });
+      setLocation(`/transaction/${transaction?.id}`);
     },
     onError: (error: any) => {
       toast({
@@ -63,7 +63,7 @@ export const BuyerConfirmation = (): JSX.Element => {
   }
 
   if (transaction.status !== "asset_transferred") {
-    setLocation(`/transaction/${transaction.uniqueLink}`);
+    setLocation(`/transaction/${transaction.id}`);
     return <></>;
   }
 
@@ -138,7 +138,7 @@ export const BuyerConfirmation = (): JSX.Element => {
             <div className="flex gap-4">
               <Button
                 variant="outline"
-                onClick={() => setLocation(`/transaction/${transaction.uniqueLink}`)}
+                onClick={() => setLocation(`/transaction/${transaction.id}`)}
                 data-testid="button-cancel"
                 className="flex-1"
               >

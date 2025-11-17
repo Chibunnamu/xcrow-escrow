@@ -12,15 +12,20 @@ import { SellerDashboard } from "@/pages/SellerDashboard";
 import { CreateTransaction } from "@/pages/CreateTransaction";
 import { TransactionDetails } from "@/pages/TransactionDetails";
 import { PaymentPage } from "@/pages/PaymentPage";
+import { PaymentSuccess } from "@/pages/PaymentSuccess";
 import { BuyerConfirmation } from "@/pages/BuyerConfirmation";
+import { LandingPage } from "./pages/LandingPage";
 import Office from "@/pages/Office";
 import { Settings } from "@/pages/Settings";
+import { Marketplace } from "@/pages/Marketplace";
+import { Notifications } from "@/pages/Notifications";
 
 function Router() {
   return (
     <Switch>
       {/* Auth pages */}
-      <Route path="/" component={CreateAccount} />
+      <Route path="/" component={LandingPage} />
+      <Route path="/register" component={CreateAccount} />
       <Route path="/login" component={Login} />
       
       {/* Seller pages with dashboard layout */}
@@ -44,11 +49,22 @@ function Router() {
           <Settings />
         </DashboardLayout>
       </Route>
-      
+      <Route path="/marketplace">
+        <DashboardLayout>
+          <Marketplace />
+        </DashboardLayout>
+      </Route>
+      <Route path="/notifications">
+        <DashboardLayout>
+          <Notifications />
+        </DashboardLayout>
+      </Route>
+
       {/* Transaction pages */}
-      <Route path="/transaction/:link" component={TransactionDetails} />
-      <Route path="/payment/:link" component={PaymentPage} />
-      <Route path="/buyer-confirm/:link" component={BuyerConfirmation} />
+      <Route path="/transaction/:id" component={TransactionDetails} />
+      <Route path="/payment/:id" component={PaymentPage} />
+      <Route path="/payment-success/:reference" component={PaymentSuccess} />
+      <Route path="/buyer-confirm/:id" component={BuyerConfirmation} />
       
       {/* Fallback to 404 */}
       <Route component={NotFound} />

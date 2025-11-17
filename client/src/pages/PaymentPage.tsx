@@ -9,24 +9,24 @@ import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 
 export const PaymentPage = (): JSX.Element => {
-  const [, params] = useRoute("/payment/:link");
+  const [, params] = useRoute("/payment/:id");
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const { data: userData } = useQuery({
+  const { data: userData } = useQuery<{ user: any } | null>({
     queryKey: ["/api/user"],
   });
 
   const { data: transactionData, isLoading } = useQuery<{ transaction: Transaction } | null>({
-    queryKey: ["/api/transactions", params?.link],
-    enabled: !!params?.link,
+    queryKey: ["/api/transactions/id", params?.id],
+    enabled: !!params?.id,
   });
 
   const transaction = transactionData?.transaction;
 
   const initializePaymentMutation = useMutation({
-    mutationFn: async (uniqueLink: string) => {
-      const res = await apiRequest("POST", "/api/payments/initialize", { uniqueLink });
+    mutationFn: async (transactionId: string) => {
+      const res = await apiRequest("POST", "/api/payments/initialize", { transactionId: transactionId });
       return await res.json();
     },
     onSuccess: (data: { authorization_url: string; reference: string }) => {
@@ -42,14 +42,49 @@ export const PaymentPage = (): JSX.Element => {
   });
 
   useEffect(() => {
-    if (transaction && transaction.status !== "pending") {
-      toast({
-        title: "Payment already completed",
-        description: "This transaction has already been paid",
-      });
-      setLocation(`/transaction/${transaction.uniqueLink}`);
+    if (transaction) {
+      // Check if transaction is not payable (already paid, completed, or cancelled)
+      const nonPayableStatuses = ["paid", "asset_transferred", "completed", "cancelled"];
+      if (nonPayableStatuses.includes(transaction.status)) {
+        toast({
+          title: "Payment already completed",
+          description: "This transaction has already been paid",
+        });
+        setLocation(`/transaction/${transaction.id}`);
+        return;
+      }
+
+      // Check if transaction is not in the correct status for payment (should be "active" after acceptance)
+      if (transaction.status !== "active") {
+        toast({
+          title: "Transaction not ready for payment",
+          description: "This transaction is not in the correct state for payment",
+        });
+        setLocation(`/transaction/${transaction.id}`);
+        return;
+      }
+
+      // Check if transaction is not accepted yet
+      if (!transaction.buyerId) {
+        toast({
+          title: "Transaction not accepted",
+          description: "You must accept the transaction before making payment",
+        });
+        setLocation(`/transaction/${transaction.id}`);
+        return;
+      }
+
+      // Check if user is not the buyer
+      if (userData?.user?.id !== transaction.buyerId) {
+        toast({
+          title: "Unauthorized",
+          description: "You are not authorized to pay for this transaction",
+        });
+        setLocation(`/transaction/${transaction.id}`);
+        return;
+      }
     }
-  }, [transaction]);
+  }, [transaction, userData]);
 
   if (isLoading) {
     return (
@@ -121,14 +156,14 @@ export const PaymentPage = (): JSX.Element => {
             <div className="flex gap-4">
               <Button
                 variant="outline"
-                onClick={() => setLocation(`/transaction/${transaction.uniqueLink}`)}
+                onClick={() => setLocation(`/transaction/${transaction.id}`)}
                 data-testid="button-cancel"
                 className="flex-1"
               >
                 Cancel
               </Button>
               <Button
-                onClick={() => initializePaymentMutation.mutate(transaction.uniqueLink)}
+                onClick={() => initializePaymentMutation.mutate(transaction.id)}
                 disabled={initializePaymentMutation.isPending}
                 data-testid="button-proceed"
                 className="flex-1 bg-[#493d9e] hover:bg-[#493d9e]/90"

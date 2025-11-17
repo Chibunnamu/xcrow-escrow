@@ -1,10 +1,10 @@
 import axios from "axios";
 
-if (!process.env.PAYSTACK_SECRET_KEY) {
-  console.warn("PAYSTACK_SECRET_KEY not set - transfer functionality will not work");
-}
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
 
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY || "";
+if (!PAYSTACK_SECRET_KEY) {
+  throw new Error("PAYSTACK_SECRET_KEY is required for transfer functionality");
+}
 const PAYSTACK_BASE_URL = "https://api.paystack.co";
 
 interface BankListResponse {

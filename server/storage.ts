@@ -1,18 +1,6 @@
-import { type User, type InsertUser, type UpsertUser, type Transaction, type InsertTransaction, type Dispute, type InsertDispute, type Payout, type PayoutStatus, users, transactions, disputes, payouts, type TransactionStatus, type DisputeStatus } from "@shared/schema";
-import { drizzle } from "drizzle-orm/node-postgres";
-import { eq, desc } from "drizzle-orm";
-import { Pool } from "pg";
-import { hashPassword } from "./auth";
-
-if (!process.env.DATABASE_URL) {
-  throw new Error("DATABASE_URL must be set");
-}
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
-
-const db = drizzle({ client: pool });
+import { db } from "./firebase.ts";
+import type { User, InsertUser, UpsertUser, Transaction, InsertTransaction, Dispute, InsertDispute, Payout, PayoutStatus, TransactionStatus, DisputeStatus, Notification, InsertNotification } from "@shared/schema";
+import { randomBytes } from "crypto";
 
 export interface IStorage {
   // User methods
@@ -64,199 +52,310 @@ export interface IStorage {
   updatePayoutStatus(payoutId: string, status: PayoutStatus, transferCode?: string, paystackReference?: string, failureReason?: string): Promise<Payout | undefined>;
   getPayoutsBySeller(sellerId: string): Promise<Array<Payout & { transaction: Transaction }>>;
   getPayoutByTransaction(transactionId: string): Promise<Payout | undefined>;
+  getPayoutByTransferCode(transferCode: string): Promise<Payout | undefined>;
+
+  // Notification methods
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  getNotificationsByUser(userId: string): Promise<Notification[]>;
+  markNotificationAsRead(notificationId: string): Promise<Notification | undefined>;
+  markAllAsRead(userId: string): Promise<boolean>;
+  getUnreadNotificationsCount(userId: string): Promise<number>;
 }
 
-export class DatabaseStorage implements IStorage {
+class FirebaseStorage implements IStorage {
   // User methods
   async getUser(id: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.id, id)).limit(1);
-    return result[0];
+    try {
+      const docRef = db.collection("users").doc(id);
+      const docSnap = await docRef.get();
+      if (docSnap.exists) {
+        return { id, ...docSnap.data() } as User;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error getting user:", error);
+      throw error;
+    }
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.email, email)).limit(1);
-    return result[0];
+    try {
+      const querySnapshot = await db.collection("users").where("email", "==", email).get();
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        return { id: doc.id, ...doc.data() } as User;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error getting user by email:", error);
+      throw error;
+    }
   }
 
   async getUserByOAuthSub(oauthSub: string): Promise<User | undefined> {
-    const result = await db.select().from(users).where(eq(users.oauthSub, oauthSub)).limit(1);
-    return result[0];
-  }
-
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const hashedPassword = await hashPassword(insertUser.password);
-    const result = await db.insert(users).values({
-      ...insertUser,
-      password: hashedPassword,
-    }).returning();
-    return result[0];
-  }
-
-  async upsertUser(userData: UpsertUser): Promise<User> {
-    // Check if a user with this OAuth sub already exists
-    const existingOAuthUser = await this.getUserByOAuthSub(userData.oauthSub);
-    if (existingOAuthUser) {
-      // OAuth user exists - update their record
-      const [updatedUser] = await db
-        .update(users)
-        .set({
-          email: userData.email || existingOAuthUser.email,
-          profileImageUrl: userData.profileImageUrl,
-          firstName: userData.firstName || existingOAuthUser.firstName,
-          lastName: userData.lastName || existingOAuthUser.lastName,
-          updatedAt: new Date(),
-        })
-        .where(eq(users.oauthSub, userData.oauthSub))
-        .returning();
-      return updatedUser;
-    }
-
-    // Check if a user with this email already exists (email/password user)
-    if (userData.email) {
-      const existingEmailUser = await this.getUserByEmail(userData.email);
-      if (existingEmailUser) {
-        // User exists with this email - link OAuth to existing account
-        const [updatedUser] = await db
-          .update(users)
-          .set({
-            oauthSub: userData.oauthSub,
-            profileImageUrl: userData.profileImageUrl,
-            firstName: userData.firstName || existingEmailUser.firstName,
-            lastName: userData.lastName || existingEmailUser.lastName,
-            updatedAt: new Date(),
-          })
-          .where(eq(users.email, userData.email))
-          .returning();
-        return updatedUser;
+    try {
+      const querySnapshot = await db.collection("users").where("oauthSub", "==", oauthSub).get();
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        return { id: doc.id, ...doc.data() } as User;
       }
+      return undefined;
+    } catch (error) {
+      console.error("Error getting user by OAuth sub:", error);
+      throw error;
     }
+  }
 
-    // No existing user - insert new OAuth user with generated UUID id
-    const [user] = await db
-      .insert(users)
-      .values(userData)
-      .returning();
-    return user;
+  async createUser(user: InsertUser): Promise<User> {
+    try {
+      const docRef = db.collection("users").doc();
+      const userData = {
+        ...user,
+        id: docRef.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      await docRef.set(userData);
+      return userData as User;
+    } catch (error) {
+      console.error("Error creating user:", error);
+      throw error;
+    }
+  }
+
+  async upsertUser(user: UpsertUser): Promise<User> {
+    try {
+      const existingUser = await this.getUserByEmail(user.email!);
+      if (existingUser) {
+        const docRef = db.collection("users").doc(existingUser.id);
+        const updateData = {
+          ...user,
+          updatedAt: new Date(),
+        };
+        await docRef.update(updateData);
+        return { ...existingUser, ...updateData };
+      } else {
+        // For OAuth users, create with default values for required fields
+        const userData: InsertUser = {
+          email: user.email!,
+          password: user.oauthSub || 'oauth_user', // Use oauthSub as password or default
+          firstName: user.firstName || user.email!.split('@')[0],
+          lastName: user.lastName || '',
+          country: 'Nigeria', // Default country
+        };
+        return this.createUser(userData);
+      }
+    } catch (error) {
+      console.error("Error upserting user:", error);
+      throw error;
+    }
   }
 
   // Transaction methods
   async getTransaction(id: string): Promise<Transaction | undefined> {
-    const result = await db.select().from(transactions).where(eq(transactions.id, id)).limit(1);
-    return result[0];
+    try {
+      const docRef = db.collection("transactions").doc(id);
+      const docSnap = await docRef.get();
+      if (docSnap.exists) {
+        return { id, ...docSnap.data() } as Transaction;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error getting transaction:", error);
+      throw error;
+    }
   }
 
   async getTransactionByLink(link: string): Promise<Transaction | undefined> {
-    const result = await db.select().from(transactions).where(eq(transactions.uniqueLink, link)).limit(1);
-    return result[0];
+    try {
+      const querySnapshot = await db.collection("transactions").where("uniqueLink", "==", link).get();
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        return { id: doc.id, ...doc.data() } as Transaction;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error getting transaction by link:", error);
+      throw error;
+    }
   }
 
   async getTransactionsBySeller(sellerId: string): Promise<Transaction[]> {
-    return await db.select().from(transactions).where(eq(transactions.sellerId, sellerId));
+    try {
+      const querySnapshot = await db.collection("transactions")
+        .where("sellerId", "==", sellerId)
+        .get();
+      // Sort in memory instead of using orderBy (avoids composite index requirement)
+      return querySnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as Transaction))
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } catch (error) {
+      console.error("Error getting transactions by seller:", error);
+      throw error;
+    }
   }
 
   async getTransactionsByBuyer(buyerId: string): Promise<Transaction[]> {
-    return await db.select().from(transactions).where(eq(transactions.buyerId, buyerId));
+    try {
+      const querySnapshot = await db.collection("transactions")
+        .where("buyerId", "==", buyerId)
+        .get();
+      // Sort in memory instead of using orderBy (avoids composite index requirement)
+      return querySnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as Transaction))
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } catch (error) {
+      console.error("Error getting transactions by buyer:", error);
+      throw error;
+    }
   }
 
-  async createTransaction(insertTransaction: InsertTransaction): Promise<Transaction> {
-    const commission = (parseFloat(insertTransaction.price) * 0.05).toFixed(2);
-    const result = await db.insert(transactions).values({
-      ...insertTransaction,
-      commission,
-    }).returning();
-    return result[0];
+  async createTransaction(transaction: InsertTransaction): Promise<Transaction> {
+    try {
+      const docRef = db.collection("transactions").doc();
+      const uniqueLink = randomBytes(16).toString("hex");
+      const commission = (parseFloat(transaction.price) * 0.05).toFixed(2);
+      const transactionData = {
+        ...transaction,
+        uniqueLink,
+        commission,
+        status: "pending",
+        id: docRef.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      await docRef.set(transactionData);
+      return transactionData as Transaction;
+    } catch (error) {
+      console.error("Error creating transaction:", error);
+      throw error;
+    }
   }
 
   async acceptTransaction(id: string, buyerId: string): Promise<Transaction | undefined> {
-    const result = await db.update(transactions)
-      .set({ buyerId, updatedAt: new Date() })
-      .where(eq(transactions.id, id))
-      .returning();
-    return result[0];
-  }
+    try {
+      const transaction = await this.getTransaction(id);
+      if (!transaction) {
+        return undefined;
+      }
 
-  private validateStateTransition(
-    currentStatus: TransactionStatus,
-    newStatus: TransactionStatus,
-    paystackReference?: string
-  ): { valid: boolean; error?: string } {
-    const transitions: Record<TransactionStatus, TransactionStatus[]> = {
-      pending: ["paid"],
-      paid: ["asset_transferred"],
-      asset_transferred: ["completed"],
-      completed: [],
-    };
-
-    if (!transitions[currentStatus].includes(newStatus)) {
-      return {
-        valid: false,
-        error: `Invalid transition from ${currentStatus} to ${newStatus}`,
+      const docRef = db.collection("transactions").doc(id);
+      const updateData = {
+        buyerId,
+        status: "active" as TransactionStatus,
+        acceptedAt: new Date(),
+        updatedAt: new Date(),
       };
+      await docRef.update(updateData);
+      return { ...transaction, ...updateData };
+    } catch (error) {
+      console.error("Error accepting transaction:", error);
+      throw error;
     }
-
-    if (newStatus === "paid" && !paystackReference) {
-      return {
-        valid: false,
-        error: "Payment reference required for paid status",
-      };
-    }
-
-    return { valid: true };
   }
 
   async updateTransactionStatus(id: string, status: TransactionStatus, paystackReference?: string): Promise<Transaction | undefined> {
-    const transaction = await this.getTransaction(id);
-    if (!transaction) {
-      throw new Error("Transaction not found");
-    }
+    try {
+      const transaction = await this.getTransaction(id);
+      if (!transaction) {
+        return undefined;
+      }
 
-    const validation = this.validateStateTransition(
-      transaction.status,
-      status,
-      paystackReference
-    );
-
-    if (!validation.valid) {
-      throw new Error(validation.error);
+      const docRef = db.collection("transactions").doc(id);
+      const updateData: any = {
+        status,
+        updatedAt: new Date(),
+      };
+      if (paystackReference) {
+        updateData.paystackReference = paystackReference;
+      }
+      await docRef.update(updateData);
+      return { ...transaction, ...updateData };
+    } catch (error) {
+      console.error("Error updating transaction status:", error);
+      throw error;
     }
-
-    const updateData: any = { status, updatedAt: new Date() };
-    if (paystackReference) {
-      updateData.paystackReference = paystackReference;
-    }
-    const result = await db.update(transactions)
-      .set(updateData)
-      .where(eq(transactions.id, id))
-      .returning();
-    return result[0];
   }
 
   // Dispute methods
   async getDispute(id: string): Promise<Dispute | undefined> {
-    const result = await db.select().from(disputes).where(eq(disputes.id, id)).limit(1);
-    return result[0];
+    try {
+      const docRef = db.collection("disputes").doc(id);
+      const docSnap = await docRef.get();
+      if (docSnap.exists) {
+        return { id, ...docSnap.data() } as Dispute;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error getting dispute:", error);
+      throw error;
+    }
   }
 
   async getDisputesBySeller(sellerId: string): Promise<Dispute[]> {
-    return await db.select().from(disputes).where(eq(disputes.sellerId, sellerId));
+    try {
+      const querySnapshot = await db.collection("disputes")
+        .where("sellerId", "==", sellerId)
+        .get();
+      // Sort in memory instead of using orderBy (avoids composite index requirement)
+      return querySnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as Dispute))
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } catch (error) {
+      console.error("Error getting disputes by seller:", error);
+      throw error;
+    }
   }
 
   async getDisputeByTransaction(transactionId: string): Promise<Dispute | undefined> {
-    const result = await db.select().from(disputes).where(eq(disputes.transactionId, transactionId)).limit(1);
-    return result[0];
+    try {
+      const querySnapshot = await db.collection("disputes").where("transactionId", "==", transactionId).get();
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        return { id: doc.id, ...doc.data() } as Dispute;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error getting dispute by transaction:", error);
+      throw error;
+    }
   }
 
-  async createDispute(insertDispute: InsertDispute): Promise<Dispute> {
-    const result = await db.insert(disputes).values(insertDispute).returning();
-    return result[0];
+  async createDispute(dispute: InsertDispute): Promise<Dispute> {
+    try {
+      const docRef = db.collection("disputes").doc();
+      const disputeData = {
+        ...dispute,
+        id: docRef.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      await docRef.set(disputeData);
+      return disputeData as Dispute;
+    } catch (error) {
+      console.error("Error creating dispute:", error);
+      throw error;
+    }
   }
 
   async updateDisputeStatus(id: string, status: DisputeStatus): Promise<Dispute | undefined> {
-    const result = await db.update(disputes)
-      .set({ status, updatedAt: new Date() })
-      .where(eq(disputes.id, id))
-      .returning();
-    return result[0];
+    try {
+      const dispute = await this.getDispute(id);
+      if (!dispute) {
+        return undefined;
+      }
+
+      const docRef = db.collection("disputes").doc(id);
+      const updateData = {
+        status,
+        updatedAt: new Date(),
+      };
+      await docRef.update(updateData);
+      return { ...dispute, ...updateData };
+    } catch (error) {
+      console.error("Error updating dispute status:", error);
+      throw error;
+    }
   }
 
   // Statistics methods
@@ -396,73 +495,211 @@ export class DatabaseStorage implements IStorage {
 
   // Bank account methods
   async updateUserBankAccount(userId: string, bankCode: string, accountNumber: string, accountName: string, recipientCode: string): Promise<User | undefined> {
-    const result = await db.update(users)
-      .set({ 
-        bankCode, 
-        accountNumber, 
-        accountName, 
-        recipientCode 
-      })
-      .where(eq(users.id, userId))
-      .returning();
-    return result[0];
+    try {
+      const docRef = db.collection("users").doc(userId);
+      const updateData = {
+        bankCode,
+        accountNumber,
+        accountName,
+        recipientCode,
+        updatedAt: new Date(),
+      };
+      await docRef.update(updateData);
+      const updatedUser = await this.getUser(userId);
+      return updatedUser;
+    } catch (error) {
+      console.error("Error updating user bank account:", error);
+      throw error;
+    }
   }
 
   async getUserBankAccount(userId: string): Promise<User | undefined> {
-    return await this.getUser(userId);
+    return this.getUser(userId);
   }
 
   // Payout methods
   async createPayout(transactionId: string, sellerId: string, amount: string): Promise<Payout> {
-    const result = await db.insert(payouts).values({
-      transactionId,
-      sellerId,
-      amount,
-      status: "pending",
-    }).returning();
-    return result[0];
+    try {
+      const docRef = db.collection("payouts").doc();
+      const payoutData = {
+        id: docRef.id,
+        transactionId,
+        sellerId,
+        amount,
+        status: "pending" as PayoutStatus,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      await docRef.set(payoutData);
+      return payoutData as Payout;
+    } catch (error) {
+      console.error("Error creating payout:", error);
+      throw error;
+    }
   }
 
   async updatePayoutStatus(payoutId: string, status: PayoutStatus, transferCode?: string, paystackReference?: string, failureReason?: string): Promise<Payout | undefined> {
-    const updateData: any = { status, updatedAt: new Date() };
-    if (transferCode) {
-      updateData.paystackTransferCode = transferCode;
+    try {
+      const docRef = db.collection("payouts").doc(payoutId);
+      const updateData: any = {
+        status,
+        updatedAt: new Date(),
+      };
+      if (transferCode) {
+        updateData.paystackTransferCode = transferCode;
+      }
+      if (paystackReference) {
+        updateData.paystackReference = paystackReference;
+      }
+      if (failureReason) {
+        updateData.failureReason = failureReason;
+      }
+      await docRef.update(updateData);
+
+      const docSnap = await docRef.get();
+      if (docSnap.exists) {
+        return { id: docSnap.id, ...docSnap.data() } as Payout;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error updating payout status:", error);
+      throw error;
     }
-    if (paystackReference) {
-      updateData.paystackReference = paystackReference;
-    }
-    if (failureReason) {
-      updateData.failureReason = failureReason;
-    }
-    
-    const result = await db.update(payouts)
-      .set(updateData)
-      .where(eq(payouts.id, payoutId))
-      .returning();
-    return result[0];
   }
 
   async getPayoutsBySeller(sellerId: string): Promise<Array<Payout & { transaction: Transaction }>> {
-    const result = await db
-      .select({
-        payout: payouts,
-        transaction: transactions,
-      })
-      .from(payouts)
-      .innerJoin(transactions, eq(payouts.transactionId, transactions.id))
-      .where(eq(payouts.sellerId, sellerId))
-      .orderBy(desc(payouts.createdAt));
-    
-    return result.map((row) => ({
-      ...row.payout,
-      transaction: row.transaction,
-    }));
+    try {
+      const querySnapshot = await db.collection("payouts")
+        .where("sellerId", "==", sellerId)
+        .get();
+      // Sort in memory instead of using orderBy (avoids composite index requirement)
+      const payouts = await Promise.all(
+        querySnapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() } as Payout))
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .map(async (payout) => {
+            const transaction = await this.getTransaction(payout.transactionId);
+            return { ...payout, transaction: transaction! };
+          })
+      );
+      return payouts;
+    } catch (error) {
+      console.error("Error getting payouts by seller:", error);
+      throw error;
+    }
   }
 
   async getPayoutByTransaction(transactionId: string): Promise<Payout | undefined> {
-    const result = await db.select().from(payouts).where(eq(payouts.transactionId, transactionId)).limit(1);
-    return result[0];
+    try {
+      const querySnapshot = await db.collection("payouts").where("transactionId", "==", transactionId).get();
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        return { id: doc.id, ...doc.data() } as Payout;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error getting payout by transaction:", error);
+      throw error;
+    }
+  }
+
+  async getPayoutByTransferCode(transferCode: string): Promise<Payout | undefined> {
+    try {
+      const querySnapshot = await db.collection("payouts").where("paystackTransferCode", "==", transferCode).get();
+      if (!querySnapshot.empty) {
+        const doc = querySnapshot.docs[0];
+        return { id: doc.id, ...doc.data() } as Payout;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error getting payout by transfer code:", error);
+      throw error;
+    }
+  }
+
+  // Notification methods
+  async createNotification(notification: InsertNotification): Promise<Notification> {
+    try {
+      const docRef = db.collection("notifications").doc();
+      const notificationData = {
+        ...notification,
+        id: docRef.id,
+        createdAt: new Date(),
+      };
+      await docRef.set(notificationData);
+      return notificationData as Notification;
+    } catch (error) {
+      console.error("Error creating notification:", error);
+      throw error;
+    }
+  }
+
+  async getNotificationsByUser(userId: string): Promise<Notification[]> {
+    try {
+      const querySnapshot = await db.collection("notifications")
+        .where("userId", "==", userId)
+        .get();
+      // Sort in memory instead of using orderBy (avoids composite index requirement)
+      return querySnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as Notification))
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    } catch (error) {
+      console.error("Error getting notifications by user:", error);
+      throw error;
+    }
+  }
+
+  async markNotificationAsRead(notificationId: string): Promise<Notification | undefined> {
+    try {
+      const docRef = db.collection("notifications").doc(notificationId);
+      const updateData = {
+        isRead: 1,
+      };
+      await docRef.update(updateData);
+
+      const docSnap = await docRef.get();
+      if (docSnap.exists) {
+        return { id: docSnap.id, ...docSnap.data() } as Notification;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      throw error;
+    }
+  }
+
+  async getUnreadNotificationsCount(userId: string): Promise<number> {
+    try {
+      const querySnapshot = await db.collection("notifications")
+        .where("userId", "==", userId)
+        .where("isRead", "==", 0)
+        .get();
+      return querySnapshot.size;
+    } catch (error) {
+      console.error("Error getting unread notifications count:", error);
+      throw error;
+    }
+  }
+
+  async markAllAsRead(userId: string): Promise<boolean> {
+    try {
+      const querySnapshot = await db.collection("notifications")
+        .where("userId", "==", userId)
+        .where("isRead", "==", 0)
+        .get();
+
+      const batch = db.batch();
+      querySnapshot.docs.forEach(doc => {
+        batch.update(doc.ref, { isRead: 1 });
+      });
+
+      await batch.commit();
+      return true;
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      throw error;
+    }
   }
 }
 
-export const storage = new DatabaseStorage();
+export const storage = new FirebaseStorage();
