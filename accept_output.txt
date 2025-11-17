@@ -1,1 +1,0 @@
-{"message":"Transaction already accepted by another buyer"}
