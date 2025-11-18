@@ -1,17 +1,14 @@
 import admin from "firebase-admin";
-import * as path from "path";
-import * as fs from "fs";
 
-// Path to the service account key
-const serviceAccountPath = path.join(process.cwd(), "xcrow-b8385-firebase-adminsdk-fbsvc-1730b7e6b2.json");
-
-// Read the service account key
-const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
-
+// Firebase configuration using environment variables
 const firebaseConfig = {
-  credential: admin.credential.cert(serviceAccount),
-  projectId: "xcrow-b8385",
-  storageBucket: "xcrow-b8385.firebasestorage.app"
+  credential: admin.credential.cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+  }),
+  projectId: process.env.FIREBASE_PROJECT_ID,
+  storageBucket: `${process.env.FIREBASE_PROJECT_ID}.firebasestorage.app`
 };
 
 // Initialize Firebase Admin
