@@ -16,6 +16,11 @@
       "dest": "/dist/public/index.html"
     }
   ],
+  "functions": {
+    "dist/index.js": {
+      "maxDuration": 10
+    }
+  },
   "env": {
     "NODE_ENV": "production"
   }
