@@ -4,10 +4,8 @@ dist
 server/public
 vite.config.ts.*
 *.tar.gz
-xcrow-b8385-firebase-adminsdk-fbsvc-1730b7e6b2.json
 .env
 PAYOUT_SYSTEM.md
-"xcrow-b8385-firebase-adminsdk-fbsvc-1730b7e6b2.json"  
-".env"  
-"PAYOUT_SYSTEM.md" 
+".env"
+"PAYOUT_SYSTEM.md"
 .vercel
