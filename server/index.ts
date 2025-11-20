@@ -93,7 +93,7 @@ app.post(
         const payout = await storage.getPayoutByTransferCode(transferCode);
 
         if (payout) {
-          await storage.updatePayoutStatus(payout.id, "success", transferCode, event.data.reference);
+          await storage.updatePayoutStatus(payout.id, "processing", transferCode, event.data.reference);
 
           // Create payout success notification via webhook
           await storage.createNotification({

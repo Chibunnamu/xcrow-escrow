@@ -352,14 +352,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
                   transferData.data.reference
                 );
 
-                // Create payout success audit trail notification
+                // Create payout processing audit trail notification
                 await storage.createNotification({
                   userId: existingTransaction.sellerId,
-                  type: "payout_successful",
-                  title: "Payout Successful",
-                  message: `Payout of ₦${payoutAmount} processed for transaction "${existingTransaction.itemName}" (Transfer Code: ${transferData.data.transfer_code}).`,
+                  type: "payout_processing",
+                  title: "Payout Processing",
+                  message: `Payout of ₦${payoutAmount} is being processed for transaction "${existingTransaction.itemName}" (Transfer Code: ${transferData.data.transfer_code}).`,
                   data: {
-                    action: "payout_success",
+                    action: "payout_processing",
                     payoutId: payout.id,
                     transactionId: existingTransaction.id,
                     sellerId: existingTransaction.sellerId,
