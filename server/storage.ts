@@ -157,7 +157,14 @@ class FirebaseStorage implements IStorage {
       const docRef = db.collection("transactions").doc(id);
       const docSnap = await docRef.get();
       if (docSnap.exists) {
-        return { id, ...docSnap.data() } as Transaction;
+        const data = docSnap.data();
+        return {
+          id,
+          ...data,
+          createdAt: data?.createdAt?.toDate?.()?.toISOString() || data?.createdAt,
+          updatedAt: data?.updatedAt?.toDate?.()?.toISOString() || data?.updatedAt,
+          escrowExpiresAt: data?.escrowExpiresAt?.toDate?.()?.toISOString() || data?.escrowExpiresAt,
+        } as Transaction;
       }
       return undefined;
     } catch (error) {
@@ -171,7 +178,14 @@ class FirebaseStorage implements IStorage {
       const querySnapshot = await db.collection("transactions").where("uniqueLink", "==", link).get();
       if (!querySnapshot.empty) {
         const doc = querySnapshot.docs[0];
-        return { id: doc.id, ...doc.data() } as Transaction;
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
+          updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt,
+          escrowExpiresAt: data.escrowExpiresAt?.toDate?.()?.toISOString() || data.escrowExpiresAt,
+        } as Transaction;
       }
       return undefined;
     } catch (error) {
@@ -202,7 +216,16 @@ class FirebaseStorage implements IStorage {
         .get();
       // Sort in memory instead of using orderBy (avoids composite index requirement)
       return querySnapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() } as Transaction))
+        .map(doc => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            ...data,
+            createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
+            updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt,
+            escrowExpiresAt: data.escrowExpiresAt?.toDate?.()?.toISOString() || data.escrowExpiresAt,
+          } as Transaction;
+        })
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     } catch (error) {
       console.error("Error getting transactions by buyer:", error);
@@ -575,7 +598,15 @@ class FirebaseStorage implements IStorage {
       // Sort in memory instead of using orderBy (avoids composite index requirement)
       const payouts = await Promise.all(
         querySnapshot.docs
-          .map(doc => ({ id: doc.id, ...doc.data() } as Payout))
+          .map(doc => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              ...data,
+              createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
+              updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt,
+            } as Payout;
+          })
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
           .map(async (payout) => {
             const transaction = await this.getTransaction(payout.transactionId);
