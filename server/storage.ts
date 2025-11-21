@@ -157,14 +157,22 @@ class FirebaseStorage implements IStorage {
       const docRef = db.collection("transactions").doc(id);
       const docSnap = await docRef.get();
       if (docSnap.exists) {
-        const data = docSnap.data();
+        const data = docSnap.data() as any;
         return {
           id,
-          ...data,
-          createdAt: data?.createdAt?.toDate?.()?.toISOString() || data?.createdAt,
-          updatedAt: data?.updatedAt?.toDate?.()?.toISOString() || data?.updatedAt,
-          escrowExpiresAt: data?.escrowExpiresAt?.toDate?.()?.toISOString() || data?.escrowExpiresAt,
-        } as Transaction;
+          sellerId: data.sellerId,
+          buyerId: data.buyerId,
+          buyerEmail: data.buyerEmail,
+          itemName: data.itemName,
+          itemDescription: data.itemDescription,
+          price: data.price,
+          commission: data.commission,
+          status: data.status,
+          paystackReference: data.paystackReference,
+          uniqueLink: data.uniqueLink,
+          createdAt: new Date(data?.createdAt?.toDate?.() || data?.createdAt),
+          updatedAt: new Date(data?.updatedAt?.toDate?.() || data?.updatedAt),
+        };
       }
       return undefined;
     } catch (error) {
@@ -178,14 +186,22 @@ class FirebaseStorage implements IStorage {
       const querySnapshot = await db.collection("transactions").where("uniqueLink", "==", link).get();
       if (!querySnapshot.empty) {
         const doc = querySnapshot.docs[0];
-        const data = doc.data();
+        const data = doc.data() as any;
         return {
           id: doc.id,
-          ...data,
-          createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
-          updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt,
-          escrowExpiresAt: data.escrowExpiresAt?.toDate?.()?.toISOString() || data.escrowExpiresAt,
-        } as Transaction;
+          sellerId: data.sellerId,
+          buyerId: data.buyerId,
+          buyerEmail: data.buyerEmail,
+          itemName: data.itemName,
+          itemDescription: data.itemDescription,
+          price: data.price,
+          commission: data.commission,
+          status: data.status,
+          paystackReference: data.paystackReference,
+          uniqueLink: data.uniqueLink,
+          createdAt: new Date(data.createdAt?.toDate?.() || data.createdAt),
+          updatedAt: new Date(data.updatedAt?.toDate?.() || data.updatedAt),
+        };
       }
       return undefined;
     } catch (error) {
@@ -201,7 +217,24 @@ class FirebaseStorage implements IStorage {
         .get();
       // Sort in memory instead of using orderBy (avoids composite index requirement)
       return querySnapshot.docs
-        .map(doc => ({ id: doc.id, ...doc.data() } as Transaction))
+        .map(doc => {
+          const data = doc.data() as any;
+          return {
+            id: doc.id,
+            sellerId: data.sellerId,
+            buyerId: data.buyerId,
+            buyerEmail: data.buyerEmail,
+            itemName: data.itemName,
+            itemDescription: data.itemDescription,
+            price: data.price,
+            commission: data.commission,
+            status: data.status,
+            paystackReference: data.paystackReference,
+            uniqueLink: data.uniqueLink,
+            createdAt: new Date(data.createdAt?.toDate?.() || data.createdAt),
+            updatedAt: new Date(data.updatedAt?.toDate?.() || data.updatedAt),
+          };
+        })
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     } catch (error) {
       console.error("Error getting transactions by seller:", error);
@@ -217,14 +250,22 @@ class FirebaseStorage implements IStorage {
       // Sort in memory instead of using orderBy (avoids composite index requirement)
       return querySnapshot.docs
         .map(doc => {
-          const data = doc.data();
+          const data = doc.data() as any;
           return {
             id: doc.id,
-            ...data,
-            createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
-            updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt,
-            escrowExpiresAt: data.escrowExpiresAt?.toDate?.()?.toISOString() || data.escrowExpiresAt,
-          } as Transaction;
+            sellerId: data.sellerId,
+            buyerId: data.buyerId,
+            buyerEmail: data.buyerEmail,
+            itemName: data.itemName,
+            itemDescription: data.itemDescription,
+            price: data.price,
+            commission: data.commission,
+            status: data.status,
+            paystackReference: data.paystackReference,
+            uniqueLink: data.uniqueLink,
+            createdAt: new Date(data.createdAt?.toDate?.() || data.createdAt),
+            updatedAt: new Date(data.updatedAt?.toDate?.() || data.updatedAt),
+          };
         })
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     } catch (error) {
@@ -603,8 +644,8 @@ class FirebaseStorage implements IStorage {
             return {
               id: doc.id,
               ...data,
-              createdAt: data.createdAt?.toDate?.()?.toISOString() || data.createdAt,
-              updatedAt: data.updatedAt?.toDate?.()?.toISOString() || data.updatedAt,
+              createdAt: new Date(data.createdAt?.toDate?.() || data.createdAt),
+              updatedAt: new Date(data.updatedAt?.toDate?.() || data.updatedAt),
             } as Payout;
           })
           .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
