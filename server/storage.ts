@@ -761,7 +761,7 @@ class FirebaseStorage implements IStorage {
         .get();
 
       const batch = db.batch();
-      querySnapshot.docs.forEach(doc => {
+      querySnapshot.docs.forEach((doc: any) => {
         batch.update(doc.ref, { isRead: 1 });
       });
 
