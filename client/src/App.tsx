@@ -9,26 +9,29 @@ import {TransactionDetails} from "./pages/TransactionDetails";
 import {CreateTransaction} from "./pages/CreateTransaction";
 import {Settings} from "./pages/Settings";
 import { ThemeProvider } from "next-themes";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 
 const queryClient = new QueryClient();
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <Router>
-          <AuthProvider>
-            <Route path="/" component={SellerDashboard} />
-            <Route path="/login" component={Login} />
-            <Route path="/signup" component={CreateAccount} />
-            <Route path="/transaction/:id" component={TransactionDetails} />
-            <Route path="/create-transaction" component={CreateTransaction} />
-            <Route path="/profile" component={Settings} />
-            <Toaster />
-          </AuthProvider>
-        </Router>
-      </ThemeProvider>
-    </QueryClientProvider>
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Router>
+            <AuthProvider>
+              <Route path="/" component={SellerDashboard} />
+              <Route path="/login" component={Login} />
+              <Route path="/signup" component={CreateAccount} />
+              <Route path="/transaction/:id" component={TransactionDetails} />
+              <Route path="/create-transaction" component={CreateTransaction} />
+              <Route path="/profile" component={Settings} />
+              <Toaster />
+            </AuthProvider>
+          </Router>
+        </ThemeProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 }
 

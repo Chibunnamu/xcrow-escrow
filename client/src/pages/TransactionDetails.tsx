@@ -180,18 +180,108 @@ export const TransactionDetails = (): JSX.Element => {
     );
   };
 
+  // Show loading state while checking authentication
+  if (userLoading) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-[#493d9e] mx-auto mb-4" />
+          <p className="text-gray-600">Authenticating...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if user fetch fails
+  if (userError) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-red-600">Authentication Error</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-gray-600">
+              We couldn't verify your authentication. Please try logging in again.
+            </p>
+            <Button
+              onClick={() => setLocation("/login")}
+              className="w-full"
+            >
+              Go to Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Redirect to login if no user data
+  if (!userData?.user) {
+    setLocation("/login");
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-[#493d9e] mx-auto mb-4" />
+          <p className="text-gray-600">Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
       <div className="w-full min-h-screen flex items-center justify-center">
-        <Loader2 className="w-8 h-8 animate-spin" />
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-[#493d9e] mx-auto mb-4" />
+          <p className="text-gray-600">Loading transaction...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (transactionError) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-red-600">Transaction Error</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-gray-600">
+              We couldn't load this transaction. It may not exist or you may not have permission to view it.
+            </p>
+            <Button
+              onClick={() => setLocation("/")}
+              className="w-full"
+            >
+              Go to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
   if (!transaction) {
     return (
-      <div className="w-full min-h-screen flex items-center justify-center">
-        <p>Transaction not found</p>
+      <div className="w-full min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-gray-600">Transaction Not Found</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-gray-600">
+              The transaction you're looking for doesn't exist.
+            </p>
+            <Button
+              onClick={() => setLocation("/")}
+              className="w-full"
+            >
+              Go to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
       </div>
     );
   }

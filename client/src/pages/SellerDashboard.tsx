@@ -20,11 +20,13 @@ export const SellerDashboard = (): JSX.Element => {
   const { toast } = useToast();
   const [transactionLink, setTransactionLink] = useState("");
 
-  const { data: userData } = useQuery<{ user: any } | null>({
+  const { data: userData, isLoading: userLoading, error: userError } = useQuery<{ user: any } | null>({
     queryKey: ["/api/user"],
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const { data: stats, isLoading: statsLoading } = useQuery<{
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery<{
     totalTransactions: number;
     successRate: number;
     escrowVolume: number;
@@ -34,30 +36,35 @@ export const SellerDashboard = (): JSX.Element => {
   }>({
     queryKey: ["/api/dashboard/stats"],
     enabled: !!userData?.user,
+    retry: 1,
   });
 
-  const { data: chartData, isLoading: chartLoading } = useQuery<{ data: Array<{ month: string; amount: number }> }>({
+  const { data: chartData, isLoading: chartLoading, error: chartError } = useQuery<{ data: Array<{ month: string; amount: number }> }>({
     queryKey: ["/api/dashboard/transactions-over-time"],
     enabled: !!userData?.user,
+    retry: 1,
   });
 
-  const { data: activitiesData, isLoading: activitiesLoading } = useQuery<{
+  const { data: activitiesData, isLoading: activitiesLoading, error: activitiesError } = useQuery<{
     activities: Array<{ id: string; activity: string; details: string; time: string }>;
   }>({
     queryKey: ["/api/dashboard/recent-activities"],
     enabled: !!userData?.user,
+    retry: 1,
   });
 
-  const { data: purchases, isLoading: purchasesLoading } = useQuery<Transaction[]>({
+  const { data: purchases, isLoading: purchasesLoading, error: purchasesError } = useQuery<Transaction[]>({
     queryKey: ["/api/transactions/buyer"],
     enabled: !!userData?.user,
+    retry: 1,
   });
 
   type PayoutWithTransaction = Payout & { transaction: Transaction };
 
-  const { data: payoutsData, isLoading: payoutsLoading } = useQuery<{ payouts: PayoutWithTransaction[] }>({
+  const { data: payoutsData, isLoading: payoutsLoading, error: payoutsError } = useQuery<{ payouts: PayoutWithTransaction[] }>({
     queryKey: ["/api/payouts"],
     enabled: !!userData?.user,
+    retry: 1,
   });
 
   const releaseFundsMutation = useMutation({
@@ -82,9 +89,53 @@ export const SellerDashboard = (): JSX.Element => {
     },
   });
 
+  // Show loading state while checking authentication
+  if (userLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-[#493d9e] mx-auto mb-4" />
+          <p className="text-gray-600">Authenticating...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if user fetch fails
+  if (userError) {
+    return (
+      <div className="flex items-center justify-center min-h-screen p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="text-red-600">Authentication Error</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-gray-600">
+              We couldn't verify your authentication. Please try logging in again.
+            </p>
+            <Button
+              onClick={() => setLocation("/login")}
+              className="w-full"
+            >
+              Go to Login
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // Redirect to login if no user data
   if (!userData?.user) {
     setLocation("/login");
-    return <></>;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin text-[#493d9e] mx-auto mb-4" />
+          <p className="text-gray-600">Redirecting to login...</p>
+        </div>
+      </div>
+    );
   }
 
   const userName = userData.user.name || userData.user.email.split('@')[0];

@@ -23,8 +23,10 @@ export const CreateTransaction = (): JSX.Element => {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const { data: userData } = useQuery({
+  const { data: userData, isLoading: userLoading, error: userError } = useQuery({
     queryKey: ["/api/user"],
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const form = useForm<TransactionForm>({
@@ -66,10 +68,53 @@ export const CreateTransaction = (): JSX.Element => {
     createTransactionMutation.mutate(data);
   });
 
-  if (!userData) {
+  // Show loading state while checking authentication
+  if (userLoading) {
     return (
       <div className="w-full min-h-screen flex items-center justify-center">
-        <p>Please login first</p>
+        <div className="text-center">
+          <Loader2 className="w-6 h-6 animate-spin text-[#493d9e] mx-auto mb-2" />
+          <p className="text-gray-600 text-sm">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state if user fetch fails
+  if (userError) {
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center p-4">
+        <div className="w-full max-w-md">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-red-600">Authentication Error</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-gray-600">
+                We couldn't verify your authentication. Please try logging in again.
+              </p>
+              <Button
+                onClick={() => setLocation("/login")}
+                className="w-full"
+              >
+                Go to Login
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
+
+  // Redirect to login if no user data
+  if (!userData?.user) {
+    setLocation("/login");
+    return (
+      <div className="w-full min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-6 h-6 animate-spin text-[#493d9e] mx-auto mb-2" />
+          <p className="text-gray-600 text-sm">Redirecting to login...</p>
+        </div>
       </div>
     );
   }
