@@ -4,10 +4,10 @@ import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "./hooks/AuthProvider";
 import { SellerDashboard } from "./pages/SellerDashboard";
 import Login from "./pages/Login";
-import CreateAccount from "./pages/CreateAccount";
-import TransactionDetails from "./pages/TransactionDetails";
-import CreateTransaction from "./pages/CreateTransaction";
-import Settings from "./pages/Settings";
+import {CreateAccount} from "./pages/CreateAccount";
+import {TransactionDetails} from "./pages/TransactionDetails";
+import {CreateTransaction} from "./pages/CreateTransaction";
+import {Settings} from "./pages/Settings";
 import { ThemeProvider } from "next-themes";
 
 const queryClient = new QueryClient();

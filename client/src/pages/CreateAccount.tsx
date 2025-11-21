@@ -82,7 +82,7 @@ export const CreateAccount = (): JSX.Element => {
               src="/figmaAssets/material-symbols-shield.svg"
             />
 
-            <div className="absolute top-px left-12 [font-family:'Inter',Helvetica] font-bold text-white text-[38.7px] tracking-[-0.77px] leading-[38.7px] whitespace-nowrap">
+            <div className="absolute top-px left-12 font-inter font-bold text-white text-4xl tracking-tight leading-tight whitespace-nowrap">
               xcrow
             </div>
           </div>
@@ -306,7 +306,7 @@ export const CreateAccount = (): JSX.Element => {
 
                 <Label
                   htmlFor="terms"
-                  className="relative w-fit mt-[-1.00px] [font-family:'Poppins',Helvetica] font-normal text-transparent text-sm tracking-[0] leading-[14px] cursor-pointer"
+                  className="relative w-fit mt-[-1.00px] font-poppins font-normal text-transparent text-sm tracking-normal leading-tight cursor-pointer"
                 >
                   <span className="text-[#041d0f] leading-[17.5px]">
                     I agree to the{" "}

@@ -68,7 +68,7 @@ const Login = (): JSX.Element => {
               src="/figmaAssets/material-symbols-shield.svg"
             />
 
-            <div className="absolute top-px left-12 [font-family:'Inter',Helvetica] font-bold text-white text-[38.7px] tracking-[-0.77px] leading-[38.7px] whitespace-nowrap">
+            <div className="absolute top-px left-12 font-inter font-bold text-white text-4xl tracking-tight leading-tight whitespace-nowrap">
               xcrow
             </div>
           </div>
@@ -229,7 +229,7 @@ const Login = (): JSX.Element => {
                 </span>
               </Button>
 
-              <p className="relative w-fit [font-family:'Poppins',Helvetica] font-normal text-transparent text-sm tracking-[0] leading-[14px]">
+              <p className="relative w-fit font-poppins font-normal text-transparent text-sm tracking-normal leading-tight">
                 <span className="text-[#041d0f] leading-[17.5px]">
                   Don't have an account?
                 </span>
@@ -251,3 +251,4 @@ const Login = (): JSX.Element => {
     </div>
   );
 };
+export default Login;
