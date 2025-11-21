@@ -1,14 +1,13 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "wouter";
+import { Router, Route } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "./hooks/AuthProvider";
-import Dashboard from "./pages/Dashboard";
+import SellerDashboard from "./pages/SellerDashboard";
 import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+import CreateAccount from "./pages/CreateAccount";
 import TransactionDetails from "./pages/TransactionDetails";
 import CreateTransaction from "./pages/CreateTransaction";
-import Profile from "./pages/Profile";
-import Payouts from "./pages/Payouts";
+import Settings from "./pages/Settings";
 import { ThemeProvider } from "next-themes";
 
 const queryClient = new QueryClient();
@@ -17,20 +16,17 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        <BrowserRouter>
+        <Router>
           <AuthProvider>
-            <Routes>
-              <Route path="/" component={Dashboard} />
-              <Route path="/login" component={Login} />
-              <Route path="/signup" component={Signup} />
-              <Route path="/transaction/:id" component={TransactionDetails} />
-              <Route path="/create-transaction" component={CreateTransaction} />
-              <Route path="/profile" component={Profile} />
-              <Route path="/payouts" component={Payouts} />
-            </Routes>
+            <Route path="/" component={SellerDashboard} />
+            <Route path="/login" component={Login} />
+            <Route path="/signup" component={CreateAccount} />
+            <Route path="/transaction/:id" component={TransactionDetails} />
+            <Route path="/create-transaction" component={CreateTransaction} />
+            <Route path="/profile" component={Settings} />
             <Toaster />
           </AuthProvider>
-        </BrowserRouter>
+        </Router>
       </ThemeProvider>
     </QueryClientProvider>
   );
