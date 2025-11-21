@@ -2,7 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Router, Route } from "wouter";
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from "./hooks/AuthProvider";
-import SellerDashboard from "./pages/SellerDashboard";
+import { SellerDashboard } from "./pages/SellerDashboard";
 import Login from "./pages/Login";
 import CreateAccount from "./pages/CreateAccount";
 import TransactionDetails from "./pages/TransactionDetails";
