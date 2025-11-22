@@ -1,12 +1,12 @@
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Button } from "../components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../components/ui/card";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../components/ui/select";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "../hooks/use-toast";
+import { apiRequest, queryClient } from "../lib/queryClient";
 import { Loader2, CheckCircle, Building2 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -14,6 +14,19 @@ interface Bank {
   id: number;
   code: string;
   name: string;
+}
+
+export interface AuthUserResponse {
+  user: {
+    id: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    bankCode?: string;
+    accountNumber?: string;
+    accountName?: string;
+    // include any existing backend fields
+  };
 }
 
 export const Settings = (): JSX.Element => {
@@ -25,7 +38,7 @@ export const Settings = (): JSX.Element => {
   const [verifiedAccountName, setVerifiedAccountName] = useState<string>("");
   const [isVerified, setIsVerified] = useState<boolean>(false);
 
-  const { data: userData, isLoading: userLoading } = useQuery<{ user: any } | null>({
+  const { data: userData, isLoading: userLoading } = useQuery<AuthUserResponse | null>({
     queryKey: ["/api/user"],
   });
 
@@ -130,8 +143,8 @@ export const Settings = (): JSX.Element => {
 
   // Loading state is now handled above
 
-  const user = userData.user;
-  const hasBankAccount = user.bankCode && user.accountNumber && user.accountName;
+  const user = userData?.user;
+  const hasBankAccount = user?.bankCode && user?.accountNumber && user?.accountName;
   const selectedBank = banksData?.banks.find(bank => bank.code === selectedBankCode);
 
   return (
@@ -158,19 +171,19 @@ export const Settings = (): JSX.Element => {
                   <div>
                     <Label className="text-sm text-gray-500">Bank Name</Label>
                     <p className="font-medium text-gray-900" data-testid="text-current-bank">
-                      {banksData?.banks.find(bank => bank.code === user.bankCode)?.name || user.bankCode}
+                      {banksData?.banks.find(bank => bank.code === user?.bankCode)?.name || user?.bankCode}
                     </p>
                   </div>
                   <div>
                     <Label className="text-sm text-gray-500">Account Number</Label>
                     <p className="font-medium text-gray-900" data-testid="text-current-account">
-                      ****{user.accountNumber.slice(-4)}
+                      ****{user?.accountNumber?.slice(-4)}
                     </p>
                   </div>
                   <div>
                     <Label className="text-sm text-gray-500">Account Name</Label>
                     <p className="font-medium text-gray-900" data-testid="text-current-name">
-                      {user.accountName}
+                      {user?.accountName}
                     </p>
                   </div>
                 </div>

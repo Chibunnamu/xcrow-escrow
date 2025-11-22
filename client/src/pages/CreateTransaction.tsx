@@ -1,16 +1,26 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Label } from "../components/ui/label";
+import { Textarea } from "../components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Loader2 } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
+import { apiRequest, queryClient } from "../lib/queryClient";
 import { useLocation } from "wouter";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "../hooks/use-toast";
+
+export interface AuthUserResponse {
+  user: {
+    id: string;
+    email: string;
+    firstName?: string;
+    lastName?: string;
+    // include any existing backend fields
+  };
+}
 
 const transactionSchema = z.object({
   buyerEmail: z.string().email("Invalid buyer email"),
@@ -25,7 +35,7 @@ export const CreateTransaction = (): JSX.Element => {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const { data: userData, isLoading: userLoading, error: userError } = useQuery({
+  const { data: userData, isLoading: userLoading, error: userError } = useQuery<AuthUserResponse | null>({
     queryKey: ["/api/user"],
     retry: 1,
     staleTime: 5 * 60 * 1000, // 5 minutes

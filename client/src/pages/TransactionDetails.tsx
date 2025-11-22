@@ -18,11 +18,15 @@ export const TransactionDetails = (): JSX.Element => {
   const [copied, setCopied] = useState(false);
   const [acceptDialogOpen, setAcceptDialogOpen] = useState(false);
 
-  const { data: userData } = useQuery<{ user: any } | null>({
+  const {
+    data: userData,
+    isLoading: userLoading,
+    error: userError,
+  } = useQuery<{ user: any } | null>({
     queryKey: ["/api/user"],
   });
 
-  const { data: transactionData, isLoading } = useQuery<{ transaction: Transaction } | null>({
+  const { data: transactionData, isLoading, error: transactionError } = useQuery<{ transaction: Transaction } | null>({
     queryKey: ["/api/transactions/id", params?.id],
     enabled: !!params?.id,
   });
