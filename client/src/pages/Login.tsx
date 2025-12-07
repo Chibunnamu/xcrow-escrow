@@ -7,7 +7,6 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
 import { useLocation } from "wouter";
 import { useToast } from "@/hooks/use-toast";
 
@@ -33,20 +32,40 @@ export const Login = (): JSX.Element => {
 
   const loginMutation = useMutation({
     mutationFn: async (data: LoginForm) => {
-      const res = await apiRequest("POST", "/api/login", data);
-      return await res.json();
+      const response = await fetch("/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Login failed");
+      }
+
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Login successful",
         description: "Welcome back!",
       });
-      setLocation("/seller-dashboard");
+
+      // Redirect to dashboard for all users
+      setLocation("/dashboard");
     },
     onError: (error: any) => {
+      let errorMessage = "Login failed. Please try again.";
+
+      if (error.message) {
+        errorMessage = error.message;
+      }
+
       toast({
         title: "Login failed",
-        description: error.message || "Invalid credentials",
+        description: errorMessage,
         variant: "destructive",
       });
     },

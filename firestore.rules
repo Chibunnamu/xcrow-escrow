@@ -1,0 +1,74 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Users can read and write their own user documents
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+      // Admin access to all users
+      allow read: if request.auth != null &&
+        (request.auth.token.role == "admin" ||
+         request.auth.token.role == "support" ||
+         request.auth.token.role == "superAdmin");
+      // SuperAdmin can modify user roles and status
+      allow write: if request.auth != null && request.auth.token.role == "superAdmin";
+    }
+
+    // Allow unauthenticated reads for login purposes (email/password verification)
+    // SECURITY NOTE: This allows reading user credentials without authentication
+    // Consider using Firebase Functions for authentication instead
+    match /users {
+      allow read: if true;
+    }
+
+    // Transactions - sellers can read/write their own, buyers can read their transactions
+    match /transactions/{transactionId} {
+      allow read: if request.auth != null &&
+        (resource.data.sellerId == request.auth.uid ||
+         resource.data.buyerId == request.auth.uid ||
+         resource.data.buyerEmail == request.auth.token.email);
+      allow write: if request.auth != null && resource.data.sellerId == request.auth.uid;
+      allow create: if request.auth != null;
+      // Admin access to all transactions
+      allow read: if request.auth != null &&
+        (request.auth.token.role == "admin" ||
+         request.auth.token.role == "support" ||
+         request.auth.token.role == "superAdmin");
+      // Admin can update transaction status and add notes
+      allow write: if request.auth != null && request.auth.token.role == "admin";
+    }
+
+    // Disputes - only sellers can manage their disputes
+    match /disputes/{disputeId} {
+      allow read, write: if request.auth != null && resource.data.sellerId == request.auth.uid;
+      allow create: if request.auth != null;
+      // Admin access to all disputes
+      allow read: if request.auth != null &&
+        (request.auth.token.role == "admin" ||
+         request.auth.token.role == "support" ||
+         request.auth.token.role == "superAdmin");
+    }
+
+    // Notifications - users can only access their own
+    match /notifications/{notificationId} {
+      allow read, write: if request.auth != null && resource.data.userId == request.auth.uid;
+    }
+
+    // Payouts - only sellers can read their payouts
+    match /payouts/{payoutId} {
+      allow read: if request.auth != null && resource.data.sellerId == request.auth.uid;
+    }
+
+    // EscrowCategories - public read access
+    match /EscrowCategories/{categoryId} {
+      allow read: if true;
+    }
+
+    // AdminLogs - only admins can access
+    match /AdminLogs/{logId} {
+      allow read, write: if request.auth != null &&
+        (request.auth.token.role == "admin" ||
+         request.auth.token.role == "support" ||
+         request.auth.token.role == "superAdmin");
+    }
+  }
+}

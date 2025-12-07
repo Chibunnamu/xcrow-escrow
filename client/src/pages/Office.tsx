@@ -13,6 +13,8 @@ import { Label } from "@/components/ui/label";
 import { Search, Loader2, Eye, CheckCircle, AlertTriangle, Plus, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
+import { firestoreTimestampToDate } from "../utils/firestoreTimestampToDate";
+import { formatFirestoreDate } from "../utils/formatFirestoreDate";
 
 export default function Office() {
   const [ongoingSearch, setOngoingSearch] = useState("");
@@ -35,25 +37,87 @@ export default function Office() {
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
 
-  // Fetch ongoing transactions
+  // Fetch ongoing transactions with enhanced filtering
   const { data: ongoingData, isLoading: ongoingLoading } = useQuery({
-    queryKey: ["/api/office/ongoing-transactions", { status: ongoingStatus, search: ongoingSearch }],
+    queryKey: ["/api/office/ongoing-transactions", ongoingStatus, ongoingSearch],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        sortBy: "createdAt",
+        sortOrder: "desc",
+        page: "1",
+        limit: "50"
+      });
+
+      if (ongoingStatus !== "all") {
+        params.append("status", ongoingStatus);
+      }
+      if (ongoingSearch) {
+        params.append("search", ongoingSearch);
+      }
+
+      const response = await fetch(`/api/office/ongoing-transactions?${params}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch ongoing transactions");
+      }
+      return response.json();
+    },
   });
 
   // Fetch disputes
   const { data: disputesData, isLoading: disputesLoading } = useQuery({
-    queryKey: ["/api/disputes", { status: disputeStatus }],
+    queryKey: ["/api/disputes", disputeStatus],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (disputeStatus !== "all") {
+        params.append("status", disputeStatus);
+      }
+
+      const response = await fetch(`/api/disputes?${params}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch disputes");
+      }
+      return response.json();
+    },
   });
 
-  // Fetch transaction history
+  // Fetch transaction history with enhanced filtering
   const { data: historyData, isLoading: historyLoading } = useQuery({
-    queryKey: ["/api/office/transaction-history", { 
-      search: historySearch,
-      dateFrom: historyDateFrom,
-      dateTo: historyDateTo,
-      minAmount: historyMinAmount,
-      maxAmount: historyMaxAmount,
-    }],
+    queryKey: ["/api/office/transaction-history", historySearch, historyDateFrom, historyDateTo, historyMinAmount, historyMaxAmount],
+    queryFn: async () => {
+      const params = new URLSearchParams({
+        sortBy: "completedAt",
+        sortOrder: "desc",
+        page: "1",
+        limit: "50"
+      });
+
+      if (historySearch) {
+        params.append("search", historySearch);
+      }
+      if (historyDateFrom) {
+        params.append("dateFrom", historyDateFrom);
+      }
+      if (historyDateTo) {
+        params.append("dateTo", historyDateTo);
+      }
+      if (historyMinAmount) {
+        params.append("minAmount", historyMinAmount);
+      }
+      if (historyMaxAmount) {
+        params.append("maxAmount", historyMaxAmount);
+      }
+
+      const response = await fetch(`/api/office/transaction-history?${params}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch transaction history");
+      }
+      return response.json();
+    },
+  });
+
+  // Fetch office statistics
+  const { data: statsData, isLoading: statsLoading } = useQuery({
+    queryKey: ["/api/office/stats"],
   });
 
   // Mark asset as transferred mutation
@@ -140,7 +204,7 @@ export default function Office() {
       parseFloat(t.price).toFixed(2),
       parseFloat(t.commission).toFixed(2),
       t.status,
-      new Date(t.createdAt).toLocaleDateString(),
+      firestoreTimestampToDate(t.createdAt)?.toLocaleDateString() || "Invalid Date",
     ]);
 
     const csvContent = [
@@ -163,6 +227,50 @@ export default function Office() {
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">Office</h1>
           <p className="text-gray-600 mt-2">Manage your transactions and disputes</p>
+        </div>
+
+        {/* Statistics Overview */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Transactions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {statsLoading ? "..." : (statsData as any)?.overview?.totalTransactions || 0}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Completed</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-600">
+                {statsLoading ? "..." : (statsData as any)?.overview?.completedTransactions || 0}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Ongoing</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-600">
+                {statsLoading ? "..." : (statsData as any)?.overview?.ongoingTransactions || 0}
+              </div>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-600">
+                ₦{statsLoading ? "..." : ((statsData as any)?.overview?.totalRevenue || 0).toLocaleString()}
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <Tabs defaultValue="ongoing" className="w-full">
@@ -227,13 +335,13 @@ export default function Office() {
                           <TableCell>{transaction.buyerEmail}</TableCell>
                           <TableCell>₦{parseFloat(transaction.price).toFixed(2)}</TableCell>
                           <TableCell>{getStatusBadge(transaction.status)}</TableCell>
-                          <TableCell>{new Date(transaction.createdAt).toLocaleDateString()}</TableCell>
+                          <TableCell>{formatFirestoreDate(transaction.createdAt)}</TableCell>
                           <TableCell className="text-right">
                             <div className="flex gap-2 justify-end">
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => setLocation(`/transaction/${transaction.uniqueLink}`)}
+                                onClick={() => setLocation(`/transaction/${transaction.id}`)}
                               >
                                 <Eye className="w-4 h-4 mr-1" />
                                 View
@@ -378,7 +486,7 @@ export default function Office() {
                               {dispute.status}
                             </Badge>
                           </TableCell>
-                          <TableCell>{new Date(dispute.createdAt).toLocaleDateString()}</TableCell>
+                          <TableCell>{firestoreTimestampToDate(dispute.createdAt)?.toLocaleDateString() || "Invalid Date"}</TableCell>
                           <TableCell className="text-right">
                             <Button variant="outline" size="sm">
                               <Eye className="w-4 h-4 mr-1" />
@@ -471,8 +579,8 @@ export default function Office() {
                   </div>
                 ) : (
                   <div className="space-y-4">
-                    <div className="text-sm text-gray-600">
-                      Total: {(historyData as any).transactions.length} transactions
+                  <div className="text-sm text-gray-600">
+                      Total: {(historyData as any)?.total || (historyData as any)?.transactions?.length || 0} transactions
                     </div>
                     <Table>
                       <TableHeader>
@@ -492,12 +600,12 @@ export default function Office() {
                             <TableCell>{transaction.buyerEmail}</TableCell>
                             <TableCell>₦{parseFloat(transaction.price).toFixed(2)}</TableCell>
                             <TableCell className="text-red-600">-₦{parseFloat(transaction.commission).toFixed(2)}</TableCell>
-                            <TableCell>{new Date(transaction.createdAt).toLocaleDateString()}</TableCell>
+                            <TableCell>{formatFirestoreDate(transaction.createdAt)}</TableCell>
                             <TableCell className="text-right">
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => setLocation(`/transaction/${transaction.uniqueLink}`)}
+                                onClick={() => setLocation(`/transaction/${transaction.id}`)}
                               >
                                 <Eye className="w-4 h-4 mr-1" />
                                 View

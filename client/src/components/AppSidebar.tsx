@@ -3,7 +3,7 @@ import { Home, Building2, Store, Bell, Settings, HelpCircle, LogOut } from "luci
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Sidebar,
   SidebarContent,
@@ -27,6 +27,10 @@ interface AppSidebarProps {
 export const AppSidebar = ({ user }: AppSidebarProps): JSX.Element => {
   const [location, setLocation] = useLocation();
 
+  const { data: unreadCountData } = useQuery<{ count: number }>({
+    queryKey: ["/api/notifications/unread-count"],
+  });
+
   const logoutMutation = useMutation({
     mutationFn: async () => {
       const response = await fetch("/api/logout", {
@@ -43,11 +47,18 @@ export const AppSidebar = ({ user }: AppSidebarProps): JSX.Element => {
     },
   });
 
+  // Check if user is admin
+  const isAdmin = user.role && ["admin", "support", "superAdmin"].includes(user.role);
+
   const menuItems = [
     { icon: Home, label: "Dashboard", path: "/seller-dashboard", badge: null },
     { icon: Building2, label: "Office", path: "/office", badge: null },
     { icon: Store, label: "Marketplace", path: "/marketplace", badge: null },
-    { icon: Bell, label: "Notifications", path: "/notifications", badge: 3 },
+    { icon: Bell, label: "Notifications", path: "/notifications", badge: unreadCountData?.count || 0 },
+  ];
+
+  const adminItems = [
+    { icon: Home, label: "Admin Dashboard", path: "/admin/dashboard", badge: null },
   ];
 
   const supportItems = [
