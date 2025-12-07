@@ -1,0 +1,960 @@
+Starting server...
+Setting up auth...
+Auth setup complete.
+Registering routes...
+Routes registered.
+Setting up Vite...
+Vite setup complete.
+Attempting to listen on port 5000...
+8:56:35 PM [express] serving on port 5000
+Browserslist: browsers data (caniuse-lite) is 13 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[0mGET / [32m200[0m 1408.694 ms - -[0m
+[0mGET / [32m200[0m 53.334 ms - -[0m
+[0mGET /@vite/client [32m200[0m 66.548 ms - -[0m
+[0mGET /src/main.tsx?v=q6lsvvap6PsjF_2M-R-RO [32m200[0m 73.939 ms - -[0m
+[0mGET /@react-refresh [36m304[0m 1.392 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f176e07e [32m200[0m 1.554 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/react-dom_client.js?v=f176e07e [32m200[0m 4.396 ms - -[0m
+[0mGET /src/App.tsx?v=q6lsvvap6PsjF_2M-R-RO [32m200[0m 4.617 ms - -[0m
+[0mGET /src/index.css?v=q6lsvvap6PsjF_2M-R-RO [32m200[0m 2.788 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/vite/dist/client/env.mjs [36m304[0m 2.348 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-QCHXOAYK.js?v=f176e07e [32m200[0m 3.791 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-WOOG5QLI.js?v=f176e07e [32m200[0m 1.316 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=f176e07e [32m200[0m 5.089 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/wouter.js?v=f176e07e [32m200[0m 3.762 ms - -[0m
+[0mGET /src/lib/queryClient.ts [32m200[0m 4.873 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@tanstack_react-query.js?v=f176e07e [32m200[0m 0.842 ms - -[0m
+[0mGET /src/components/ui/tooltip.tsx [32m200[0m 1.359 ms - -[0m
+[0mGET /src/pages/not-found.tsx [32m200[0m 1.168 ms - -[0m
+[0mGET /src/components/ui/toaster.tsx [32m200[0m 2.483 ms - -[0m
+[0mGET /src/components/DashboardLayout.tsx [32m200[0m 1.541 ms - -[0m
+[0mGET /src/pages/CreateAccount.tsx [32m200[0m 4.239 ms - -[0m
+[0mGET /src/pages/Login.tsx [32m200[0m 8.800 ms - -[0m
+[0mGET /src/pages/SellerDashboard.tsx [32m200[0m 2.368 ms - -[0m
+[0mGET /src/pages/CreateTransaction.tsx [32m200[0m 1.766 ms - -[0m
+[0mGET /src/pages/TransactionDetails.tsx [32m200[0m 2.171 ms - -[0m
+[0mGET /src/pages/PaymentSuccess.tsx [32m200[0m 1.591 ms - -[0m
+[0mGET /src/pages/BuyerConfirmation.tsx [32m200[0m 1.797 ms - -[0m
+[0mGET /src/pages/LandingPage.tsx [32m200[0m 1.324 ms - -[0m
+[0mGET /src/pages/PaymentPage.tsx [32m200[0m 1.520 ms - -[0m
+[0mGET /src/pages/Office.tsx [32m200[0m 2.920 ms - -[0m
+[0mGET /src/pages/Settings.tsx [32m200[0m 1.235 ms - -[0m
+[0mGET /src/pages/Marketplace.tsx [32m200[0m 1.923 ms - -[0m
+[0mGET /src/pages/Notifications.tsx [32m200[0m 1.428 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-KBTYAULA.js?v=f176e07e [32m200[0m 1.843 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/react.js?v=f176e07e [32m200[0m 2.337 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=f176e07e [32m200[0m 1.397 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/lucide-react.js?v=f176e07e [32m200[0m 1.777 ms - -[0m
+[0mGET /src/lib/utils.ts [32m200[0m 4.037 ms - -[0m
+[0mGET /src/components/ui/card.tsx [32m200[0m 1.343 ms - -[0m
+[0mGET /src/components/ui/toast.tsx [32m200[0m 1.362 ms - -[0m
+[0mGET /src/components/AppSidebar.tsx [32m200[0m 2.637 ms - -[0m
+[0mGET /src/hooks/use-toast.ts [32m200[0m 1.377 ms - -[0m
+[0mGET /src/components/ui/sidebar.tsx [32m200[0m 1.856 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/react-hook-form.js?v=f176e07e [32m200[0m 1.667 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@hookform_resolvers_zod.js?v=f176e07e [32m200[0m 1.173 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/zod.js?v=f176e07e [32m200[0m 1.372 ms - -[0m
+[0mGET /src/components/ui/button.tsx [32m200[0m 2.561 ms - -[0m
+[0mGET /src/components/ui/input.tsx [32m200[0m 3.383 ms - -[0m
+[0mGET /src/components/ui/label.tsx [32m200[0m 1.520 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/recharts.js?v=f176e07e [32m200[0m 4.030 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/date-fns.js?v=f176e07e [32m200[0m 10.861 ms - -[0m
+[0mGET /src/components/ui/checkbox.tsx [32m200[0m 1.435 ms - -[0m
+[0mGET /src/components/ui/select.tsx [32m200[0m 1.050 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/shared/schema.ts [32m200[0m 1.124 ms - -[0m
+[0mGET /src/components/ui/tabs.tsx [32m200[0m 2.355 ms - -[0m
+[0mGET /src/components/ui/badge.tsx [32m200[0m 2.859 ms - -[0m
+[0mGET /src/components/StatisticsCard.tsx [32m200[0m 3.252 ms - -[0m
+[0mGET /src/components/TransactionAcceptDialog.tsx [32m200[0m 3.860 ms - -[0m
+[0mGET /src/components/ui/textarea.tsx [32m200[0m 2.252 ms - -[0m
+[0mGET /src/components/ui/table.tsx [32m200[0m 2.975 ms - -[0m
+[0mGET /src/components/ui/dialog.tsx [32m200[0m 2.066 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/clsx.js?v=f176e07e [32m200[0m 2.262 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/tailwind-merge.js?v=f176e07e [32m200[0m 2.688 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-AY4XNGKM.js?v=f176e07e [32m200[0m 3.043 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-R5YVGTHA.js?v=f176e07e [32m200[0m 1.452 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-BHADYF3B.js?v=f176e07e [32m200[0m 1.482 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-APZ5XZMQ.js?v=f176e07e [32m200[0m 1.209 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-USOVV45I.js?v=f176e07e [32m200[0m 12.538 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-FY7XUFXW.js?v=f176e07e [32m200[0m 1.478 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-7SUNRGEF.js?v=f176e07e [32m200[0m 1.868 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-BOL2CCOG.js?v=f176e07e [32m200[0m 2.334 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-EVLBUYTV.js?v=f176e07e [32m200[0m 3.345 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-toast.js?v=f176e07e [32m200[0m 1.707 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/class-variance-authority.js?v=f176e07e [32m200[0m 2.782 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-4BFJKWC4.js?v=f176e07e [32m200[0m 2.891 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-slot.js?v=f176e07e [32m200[0m 1.248 ms - -[0m
+[0mGET /src/hooks/use-mobile.tsx [32m200[0m 1.373 ms - -[0m
+[0mGET /src/components/ui/separator.tsx [32m200[0m 1.156 ms - -[0m
+[0mGET /src/components/ui/sheet.tsx [32m200[0m 7.202 ms - -[0m
+[0mGET /src/components/ui/skeleton.tsx [32m200[0m 5.895 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-WGQNECLP.js?v=f176e07e [32m200[0m 1.358 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-label.js?v=f176e07e [32m200[0m 1.926 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-checkbox.js?v=f176e07e [32m200[0m 2.406 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-select.js?v=f176e07e [32m200[0m 3.309 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/drizzle-orm.js?v=f176e07e [32m200[0m 3.162 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/drizzle-orm_pg-core.js?v=f176e07e [32m200[0m 3.780 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/drizzle-zod.js?v=f176e07e [32m200[0m 1.172 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=f176e07e [32m200[0m 3.743 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-U7P2NEEE.js?v=f176e07e [32m200[0m 4.210 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-dialog.js?v=f176e07e [32m200[0m 4.699 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-HYQ42P6R.js?v=f176e07e [32m200[0m 4.908 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-separator.js?v=f176e07e [32m200[0m 1.915 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-43G6IMPT.js?v=f176e07e [32m200[0m 1.368 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-KSDPB6MD.js?v=f176e07e [32m200[0m 2.454 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-FQZB52Q7.js?v=f176e07e [32m200[0m 3.239 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-4RO2SXZU.js?v=f176e07e [32m200[0m 1.782 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-V6YWVKQP.js?v=f176e07e [32m200[0m 3.548 ms - -[0m
+[0mGET /figmaAssets/material-symbols-shield.svg [36m304[0m 6.479 ms - -[0m
+[0mGET /figmaAssets/group-2721.png [36m304[0m 1.780 ms - -[0m
+[0mGET /favicon.ico [32m200[0m 17.200 ms - -[0m
+[0mGET /figmaAssets/frame-1000003642.svg [36m304[0m 2.592 ms - -[0m
+[0mGET /figmaAssets/frame.svg [36m304[0m 4.580 ms - -[0m
+[0mGET /figmaAssets/frame-1000003645.svg [36m304[0m 1.833 ms - -[0m
+[0mGET /favicon.ico [32m200[0m 23.382 ms - -[0m
+[0mPOST /api/login [32m200[0m 2330.563 ms - 118[0m
+9:00:38 PM [express] POST /api/login 200 in 2329ms :: {"user":{"id":"jxl9R1jawoPTvG6KvdQ2","email":"…
+[0mGET /api/user [36m304[0m 331.121 ms - -[0m
+9:00:39 PM [express] GET /api/user 304 in 2ms :: {"user":{"id":"jxl9R1jawoPTvG6KvdQ2","email":"chimb…
+[0mGET /favicon.ico [32m200[0m 849.548 ms - -[0m
+Dashboard transactions-over-time called for user: jxl9R1jawoPTvG6KvdQ2
+Dashboard stats called for user: jxl9R1jawoPTvG6KvdQ2
+Dashboard recent-activities called for user: jxl9R1jawoPTvG6KvdQ2
+[0mGET /api/notifications/unread-count [36m304[0m 1379.761 ms - -[0m
+9:00:40 PM [express] GET /api/notifications/unread-count 304 in 865ms :: {"count":0}
+Payouts called for user: jxl9R1jawoPTvG6KvdQ2
+Dashboard transactions-over-time result: [
+  { month: 'January', amount: 0 },
+  { month: 'February', amount: 0 },
+  { month: 'March', amount: 0 },
+  { month: 'April', amount: 0 },
+  { month: 'May', amount: 0 },
+  { month: 'June', amount: 0 },
+  { month: 'July', amount: 0 },
+  { month: 'August', amount: 0 },
+  { month: 'September', amount: 0 },
+  { month: 'October', amount: 0 },
+  { month: 'November', amount: 1000 },
+  { month: 'December', amount: 0 }
+]
+[0mGET /api/dashboard/transactions-over-time [36m304[0m 1463.533 ms - -[0m
+9:00:40 PM [express] GET /api/dashboard/transactions-over-time 304 in 613ms :: {"data":[{"month":"Ja…
+Dashboard stats result: {
+  totalTransactions: 1,
+  successRate: 0,
+  escrowVolume: 1000,
+  totalTransactionsChange: 100,
+  successRateChange: 0,
+  escrowVolumeChange: 100
+}
+[0mGET /api/dashboard/stats [36m304[0m 1682.287 ms - -[0m
+9:00:40 PM [express] GET /api/dashboard/stats 304 in 832ms :: {"totalTransactions":1,"successRate":0…
+[0mGET /api/transactions/buyer [33m404[0m 1685.599 ms - 35[0m
+9:00:40 PM [express] GET /api/transactions/buyer 404 in 817ms :: {"message":"Transaction not found"}
+Payouts result: []
+[0mGET /api/payouts [36m304[0m 1329.073 ms - -[0m
+9:00:40 PM [express] GET /api/payouts 304 in 458ms :: {"payouts":[]}
+Dashboard recent-activities result: [
+  {
+    id: 'i2GqzXEatf84rNfi1F9b',
+    activity: 'Transaction #i2Gq',
+    details: 'Transaction accepted, ready for payment',
+    time: '2 hours ago'
+  },
+  {
+    id: 'Hxdr7SKbpJzM14dkoBit',
+    activity: 'Transaction #Hxdr',
+    details: 'Payment completed, awaiting asset transfer',
+    time: '3 hours ago'
+  },
+  {
+    id: 'PDzOqbBU94lFWs64qFgx',
+    activity: 'Transaction #PDzO',
+    details: 'Asset transferred, awaiting buyer confirmation',
+    time: '1 days ago'
+  },
+  {
+    id: 'g3IxEo8IusqyFWH9V1KE',
+    activity: 'Transaction #g3Ix',
+    details: 'Asset transferred - confirm receipt to complete',
+    time: '1 days ago'
+  },
+  {
+    id: 'VNAub4I1OpUNGYhgRMXF',
+    activity: 'Transaction #VNAu',
+    details: 'Payment completed, awaiting asset transfer',
+    time: '6 days ago'
+  },
+  {
+    id: 'WeQ17DziTfEHqF2dQy7L',
+    activity: 'Transaction #WeQ1',
+    details: 'Payment completed, awaiting asset transfer',
+    time: '6 days ago'
+  },
+  {
+    id: 'Lms8qd94G1Ulfgdv9a5E',
+    activity: 'Transaction #Lms8',
+    details: 'Payment completed, awaiting asset transfer',
+    time: '9 days ago'
+  },
+  {
+    id: '1HmH0OWfE4ErIUL8IFwE',
+    activity: 'Transaction #1HmH',
+    details: 'Payment completed, awaiting asset transfer',
+    time: '9 days ago'
+  },
+  {
+    id: '8DhashvGnEHv0lJ0hclm',
+    activity: 'Transaction #8Dha',
+    details: 'Payment completed, awaiting asset transfer',
+    time: '9 days ago'
+  },
+  {
+    id: 'fSN841Fepnp2Jd77mBsB',
+    activity: 'Transaction #fSN8',
+    details: 'Payment completed, awaiting asset transfer',
+    time: '9 days ago'
+  }
+]
+[0mGET /api/dashboard/recent-activities [32m200[0m 1921.711 ms - 1384[0m
+9:00:41 PM [express] GET /api/dashboard/recent-activities 200 in 1364ms :: {"activities":[{"id":"i2G…
+[0mGET /api/transactions/id/i2GqzXEatf84rNfi1F9b [36m304[0m 838.448 ms - -[0m
+9:00:45 PM [express] GET /api/transactions/id/i2GqzXEatf84rNfi1F9b 304 in 417ms :: {"transaction":{"…
+[0mGET /favicon.ico [32m200[0m 845.696 ms - -[0m
+Initializing payment for user: {
+  id: 'jxl9R1jawoPTvG6KvdQ2',
+  email: 'chimbunnamunwachinaemere@gmail.com',
+  firstName: 'chi',
+  lastName: 'chi'
+}
+Received transactionId: i2GqzXEatf84rNfi1F9b
+Found transaction: {
+  id: 'i2GqzXEatf84rNfi1F9b',
+  sellerId: 'QLZqH2aAZME2AeOwBHgy',
+  buyerEmail: 'chimbunnamunwachinaemere@gmail.com',
+  itemName: 'chicken',
+  itemDescription: 'item',
+  price: '10000',
+  uniqueLink: 'd3cb0902b79ed0afe4ffbf689aaa056e',
+  commission: '500.00',
+  createdAt: Timestamp { _seconds: 1763313325, _nanoseconds: 429000000 },
+  buyerId: 'jxl9R1jawoPTvG6KvdQ2',
+  acceptedAt: Timestamp { _seconds: 1763313339, _nanoseconds: 677000000 },
+  status: 'active',
+  updatedAt: Timestamp { _seconds: 1763313339, _nanoseconds: 677000000 }
+}
+Calculated total amount: 10500 for price: 10000 commission: 500.00
+Calling initializePayment with params: {
+  email: 'chimbunnamunwachinaemere@gmail.com',
+  amount: 10500,
+  reference: 'TXN-i2GqzXEatf84rNfi1F9b-1763323247752',
+  metadata: { transactionId: 'i2GqzXEatf84rNfi1F9b', itemName: 'chicken' }
+}
+Payment initialized successfully: {
+  status: true,
+  message: 'Authorization URL created',
+  data: {
+    authorization_url: 'https://checkout.paystack.com/6lriwn8pn4f9ozh',
+    access_code: '6lriwn8pn4f9ozh',
+    reference: 'TXN-i2GqzXEatf84rNfi1F9b-1763323247752'
+  }
+}
+[0mPOST /api/payments/initialize [32m200[0m 1597.771 ms - 122[0m
+9:00:48 PM [express] POST /api/payments/initialize 200 in 1330ms :: {"authorization_url":"https://ch…
+[0mGET /favicon.ico [32m200[0m 298.122 ms - -[0m
+[0mGET /transaction/i2GqzXEatf84rNfi1F9b [32m200[0m 314.509 ms - -[0m
+[0mGET /src/main.tsx?v=rlUPrW-uA6L9Ugi15NTtX [32m200[0m 488.800 ms - -[0m
+[0mGET /@vite/client [36m304[0m 843.706 ms - -[0m
+[0mGET /@react-refresh [36m304[0m 359.914 ms - -[0m
+[0mGET /src/App.tsx?v=rlUPrW-uA6L9Ugi15NTtX [32m200[0m 838.352 ms - -[0m
+[0mGET /src/index.css?v=rlUPrW-uA6L9Ugi15NTtX [32m200[0m 601.849 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/vite/dist/client/env.mjs [36m304[0m 788.370 ms - -[0m
+[0mGET /src/lib/queryClient.ts [36m304[0m 293.950 ms - -[0m
+[0mGET /src/components/ui/tooltip.tsx [36m304[0m 835.752 ms - -[0m
+[0mGET /src/pages/not-found.tsx [36m304[0m 841.198 ms - -[0m
+[0mGET /src/components/DashboardLayout.tsx [36m304[0m 726.202 ms - -[0m
+[0mGET /src/components/ui/toaster.tsx [36m304[0m 847.185 ms - -[0m
+[0mGET /src/pages/CreateAccount.tsx [36m304[0m 660.584 ms - -[0m
+[0mGET /src/pages/SellerDashboard.tsx [36m304[0m 305.841 ms - -[0m
+[0mGET /src/pages/Login.tsx [36m304[0m 842.499 ms - -[0m
+[0mGET /src/pages/CreateTransaction.tsx [36m304[0m 824.206 ms - -[0m
+[0mGET /src/pages/TransactionDetails.tsx [36m304[0m 840.120 ms - -[0m
+[0mGET /src/pages/PaymentSuccess.tsx [36m304[0m 745.310 ms - -[0m
+[0mGET /src/pages/PaymentPage.tsx [36m304[0m 854.938 ms - -[0m
+[0mGET /src/pages/BuyerConfirmation.tsx [36m304[0m 647.479 ms - -[0m
+[0mGET /src/pages/Office.tsx [36m304[0m 315.074 ms - -[0m
+[0mGET /src/pages/LandingPage.tsx [36m304[0m 848.233 ms - -[0m
+[0mGET /src/pages/Settings.tsx [36m304[0m 825.546 ms - -[0m
+[0mGET /src/pages/Notifications.tsx [36m304[0m 827.917 ms - -[0m
+[0mGET /src/pages/Marketplace.tsx [36m304[0m 844.389 ms - -[0m
+[0mGET /src/lib/utils.ts [36m304[0m 817.145 ms - -[0m
+[0mGET /src/components/ui/card.tsx [36m304[0m 634.137 ms - -[0m
+[0mGET /src/components/AppSidebar.tsx [36m304[0m 811.841 ms - -[0m
+[0mGET /src/components/ui/sidebar.tsx [36m304[0m 300.802 ms - -[0m
+[0mGET /src/hooks/use-toast.ts [36m304[0m 809.654 ms - -[0m
+[0mGET /src/components/ui/toast.tsx [36m304[0m 823.630 ms - -[0m
+[0mGET /src/components/ui/button.tsx [36m304[0m 764.071 ms - -[0m
+[0mGET /src/components/ui/checkbox.tsx [36m304[0m 817.851 ms - -[0m
+[0mGET /src/components/ui/input.tsx [36m304[0m 636.993 ms - -[0m
+[0mGET /src/components/ui/label.tsx [36m304[0m 817.135 ms - -[0m
+[0mGET /src/components/ui/select.tsx [36m304[0m 306.993 ms - -[0m
+[0mGET /src/components/ui/badge.tsx [36m304[0m 287.144 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/shared/schema.ts [36m304[0m 812.486 ms - -[0m
+[0mGET /src/components/ui/tabs.tsx [36m304[0m 828.344 ms - -[0m
+[0mGET /src/components/ui/textarea.tsx [36m304[0m 625.667 ms - -[0m
+[0mGET /src/components/StatisticsCard.tsx [36m304[0m 820.021 ms - -[0m
+[0mGET /src/components/TransactionAcceptDialog.tsx [36m304[0m 815.893 ms - -[0m
+[0mGET /src/components/ui/table.tsx [36m304[0m 770.294 ms - -[0m
+[0mGET /src/components/ui/dialog.tsx [36m304[0m 375.854 ms - -[0m
+[0mGET /src/hooks/use-mobile.tsx [36m304[0m 808.151 ms - -[0m
+[0mGET /src/components/ui/separator.tsx [36m304[0m 774.470 ms - -[0m
+[0mGET /src/components/ui/sheet.tsx [36m304[0m 814.026 ms - -[0m
+[0mGET /src/components/ui/skeleton.tsx [36m304[0m 639.668 ms - -[0m
+[0mGET /api/user [36m304[0m 262.370 ms - -[0m
+9:01:07 PM [express] GET /api/user 304 in 1ms :: {"user":{"id":"jxl9R1jawoPTvG6KvdQ2","email":"chimb…
+[0mGET /favicon.ico [32m200[0m 814.053 ms - -[0m
+[0mGET /api/transactions/id/i2GqzXEatf84rNfi1F9b [36m304[0m 1072.654 ms - -[0m
+9:01:08 PM [express] GET /api/transactions/id/i2GqzXEatf84rNfi1F9b 304 in 266ms :: {"transaction":{"…
+Initializing payment for user: {
+  id: 'jxl9R1jawoPTvG6KvdQ2',
+  email: 'chimbunnamunwachinaemere@gmail.com',
+  firstName: 'chi',
+  lastName: 'chi'
+}
+Received transactionId: i2GqzXEatf84rNfi1F9b
+Found transaction: {
+  id: 'i2GqzXEatf84rNfi1F9b',
+  sellerId: 'QLZqH2aAZME2AeOwBHgy',
+  buyerEmail: 'chimbunnamunwachinaemere@gmail.com',
+  itemName: 'chicken',
+  itemDescription: 'item',
+  price: '10000',
+  uniqueLink: 'd3cb0902b79ed0afe4ffbf689aaa056e',
+  commission: '500.00',
+  createdAt: Timestamp { _seconds: 1763313325, _nanoseconds: 429000000 },
+  buyerId: 'jxl9R1jawoPTvG6KvdQ2',
+  acceptedAt: Timestamp { _seconds: 1763313339, _nanoseconds: 677000000 },
+  status: 'active',
+  updatedAt: Timestamp { _seconds: 1763313339, _nanoseconds: 677000000 }
+}
+Calculated total amount: 10500 for price: 10000 commission: 500.00
+Calling initializePayment with params: {
+  email: 'chimbunnamunwachinaemere@gmail.com',
+  amount: 10500,
+  reference: 'TXN-i2GqzXEatf84rNfi1F9b-1763323270631',
+  metadata: { transactionId: 'i2GqzXEatf84rNfi1F9b', itemName: 'chicken' }
+}
+Payment initialized successfully: {
+  status: true,
+  message: 'Authorization URL created',
+  data: {
+    authorization_url: 'https://checkout.paystack.com/vh1wi7awpxk7zvw',
+    access_code: 'vh1wi7awpxk7zvw',
+    reference: 'TXN-i2GqzXEatf84rNfi1F9b-1763323270631'
+  }
+}
+[0mPOST /api/payments/initialize [32m200[0m 1482.205 ms - 122[0m
+9:01:11 PM [express] POST /api/payments/initialize 200 in 1216ms :: {"authorization_url":"https://ch…
+[0mGET /api/user [36m304[0m 277.489 ms - -[0m
+9:01:17 PM [express] GET /api/user 304 in 1ms :: {"user":{"id":"jxl9R1jawoPTvG6KvdQ2","email":"chimb…
+[0mGET /favicon.ico [32m200[0m 583.701 ms - -[0m
+[0mGET /api/transactions/id/i2GqzXEatf84rNfi1F9b [36m304[0m 1133.782 ms - -[0m
+9:01:18 PM [express] GET /api/transactions/id/i2GqzXEatf84rNfi1F9b 304 in 293ms :: {"transaction":{"…
+[0mPOST /api/login [32m200[0m 852.109 ms - 104[0m
+9:01:39 PM [express] POST /api/login 200 in 852ms :: {"user":{"id":"lcc5a4FoU3eMIXCH6BaD","email":"b…
+Initializing payment for user: {
+  id: 'lcc5a4FoU3eMIXCH6BaD',
+  email: 'buyer@example.com',
+  firstName: 'Buyer',
+  lastName: 'User'
+}
+Received transactionId: 7ccc7201b2f5dfa91b9233e371cf4093
+Found transaction: {
+  id: 'njN2N0ojAvZv2tB3cxZN',
+  sellerId: 'qS0K5uTAXISqi2xpdcuU',
+  buyerEmail: 'buyer@example.com',
+  itemName: 'Test Item',
+  itemDescription: 'Test Description',
+  price: '100.00',
+  uniqueLink: '7ccc7201b2f5dfa91b9233e371cf4093',
+  commission: '5.00',
+  createdAt: Timestamp { _seconds: 1763198865, _nanoseconds: 17000000 },
+  buyerId: 'lcc5a4FoU3eMIXCH6BaD',
+  acceptedAt: Timestamp { _seconds: 1763199048, _nanoseconds: 981000000 },
+  status: 'active',
+  updatedAt: Timestamp { _seconds: 1763199048, _nanoseconds: 981000000 }
+}
+Calculated total amount: 105 for price: 100.00 commission: 5.00
+Calling initializePayment with params: {
+  email: 'buyer@example.com',
+  amount: 105,
+  reference: 'TXN-njN2N0ojAvZv2tB3cxZN-1763323300632',
+  metadata: { transactionId: 'njN2N0ojAvZv2tB3cxZN', itemName: 'Test Item' }
+}
+Payment initialized successfully: {
+  status: true,
+  message: 'Authorization URL created',
+  data: {
+    authorization_url: 'https://checkout.paystack.com/dkb0zftzdkqdeui',
+    access_code: 'dkb0zftzdkqdeui',
+    reference: 'TXN-njN2N0ojAvZv2tB3cxZN-1763323300632'
+  }
+}
+[0mPOST /api/payments/initialize [32m200[0m 1759.811 ms - 122[0m
+9:01:41 PM [express] POST /api/payments/initialize 200 in 1479ms :: {"authorization_url":"https://ch…
+Health check called for user: unauthenticated
+[0mGET /api/health [32m200[0m 0.708 ms - 92[0m
+9:03:30 PM [express] GET /api/health 200 in 0ms :: {"status":"healthy","timestamp":"2025-11-16T20:03…
+[0mPOST /api/login [32m200[0m 861.541 ms - 104[0m
+9:04:18 PM [express] POST /api/login 200 in 862ms :: {"user":{"id":"lcc5a4FoU3eMIXCH6BaD","email":"b…
+Initializing payment for user: {
+  id: 'lcc5a4FoU3eMIXCH6BaD',
+  email: 'buyer@example.com',
+  firstName: 'Buyer',
+  lastName: 'User'
+}
+Received transactionId: 7ccc7201b2f5dfa91b9233e371cf4093
+Found transaction: {
+  id: 'njN2N0ojAvZv2tB3cxZN',
+  sellerId: 'qS0K5uTAXISqi2xpdcuU',
+  buyerEmail: 'buyer@example.com',
+  itemName: 'Test Item',
+  itemDescription: 'Test Description',
+  price: '100.00',
+  uniqueLink: '7ccc7201b2f5dfa91b9233e371cf4093',
+  commission: '5.00',
+  createdAt: Timestamp { _seconds: 1763198865, _nanoseconds: 17000000 },
+  buyerId: 'lcc5a4FoU3eMIXCH6BaD',
+  acceptedAt: Timestamp { _seconds: 1763199048, _nanoseconds: 981000000 },
+  status: 'active',
+  updatedAt: Timestamp { _seconds: 1763199048, _nanoseconds: 981000000 }
+}
+Calculated total amount: 105 for price: 100.00 commission: 5.00
+Calling initializePayment with params: {
+  email: 'buyer@example.com',
+  amount: 105,
+  reference: 'TXN-njN2N0ojAvZv2tB3cxZN-1763323459336',
+  metadata: { transactionId: 'njN2N0ojAvZv2tB3cxZN', itemName: 'Test Item' }
+}
+Payment initialized successfully: {
+  status: true,
+  message: 'Authorization URL created',
+  data: {
+    authorization_url: 'https://checkout.paystack.com/xwakd43w4buxixi',
+    access_code: 'xwakd43w4buxixi',
+    reference: 'TXN-njN2N0ojAvZv2tB3cxZN-1763323459336'
+  }
+}
+[0mPOST /api/payments/initialize [32m200[0m 1844.351 ms - 122[0m
+9:04:20 PM [express] POST /api/payments/initialize 200 in 1573ms :: {"authorization_url":"https://ch…
+[0mPOST /api/payments/initialize [33m401[0m 0.550 ms - 37[0m
+9:05:07 PM [express] POST /api/payments/initialize 401 in 0ms :: {"message":"Authentication required…
+[0mPOST /api/payments/initialize [33m401[0m 0.415 ms - 37[0m
+9:05:46 PM [express] POST /api/payments/initialize 401 in 1ms :: {"message":"Authentication required…
+Initializing payment for user: {
+  id: 'jxl9R1jawoPTvG6KvdQ2',
+  email: 'chimbunnamunwachinaemere@gmail.com',
+  firstName: 'chi',
+  lastName: 'chi'
+}
+Received transactionId: i2GqzXEatf84rNfi1F9b
+Found transaction: {
+  id: 'i2GqzXEatf84rNfi1F9b',
+  sellerId: 'QLZqH2aAZME2AeOwBHgy',
+  buyerEmail: 'chimbunnamunwachinaemere@gmail.com',
+  itemName: 'chicken',
+  itemDescription: 'item',
+  price: '10000',
+  uniqueLink: 'd3cb0902b79ed0afe4ffbf689aaa056e',
+  commission: '500.00',
+  createdAt: Timestamp { _seconds: 1763313325, _nanoseconds: 429000000 },
+  buyerId: 'jxl9R1jawoPTvG6KvdQ2',
+  acceptedAt: Timestamp { _seconds: 1763313339, _nanoseconds: 677000000 },
+  status: 'active',
+  updatedAt: Timestamp { _seconds: 1763313339, _nanoseconds: 677000000 }
+}
+Calculated total amount: 10500 for price: 10000 commission: 500.00
+Calling initializePayment with params: {
+  email: 'chimbunnamunwachinaemere@gmail.com',
+  amount: 10500,
+  reference: 'TXN-i2GqzXEatf84rNfi1F9b-1763323680021',
+  metadata: { transactionId: 'i2GqzXEatf84rNfi1F9b', itemName: 'chicken' }
+}
+Payment initialized successfully: {
+  status: true,
+  message: 'Authorization URL created',
+  data: {
+    authorization_url: 'https://checkout.paystack.com/qwwf8v119dtr4ua',
+    access_code: 'qwwf8v119dtr4ua',
+    reference: 'TXN-i2GqzXEatf84rNfi1F9b-1763323680021'
+  }
+}
+[0mPOST /api/payments/initialize [32m200[0m 5639.556 ms - 122[0m
+9:08:04 PM [express] POST /api/payments/initialize 200 in 5345ms :: {"authorization_url":"https://ch…
+[0mGET / [32m200[0m 10.023 ms - -[0m
+[0mGET / [32m200[0m 6.605 ms - -[0m
+[0mGET / [32m200[0m 13.317 ms - -[0m
+[0mGET /seller-dashboard [32m200[0m 10.739 ms - -[0m
+[0mGET /@vite/client [32m200[0m 22.751 ms - -[0m
+[0mGET /src/main.tsx?v=XQbUebi1wddvs3EX1WupY [32m200[0m 1.189 ms - -[0m
+[0mGET /@react-refresh [36m304[0m 0.893 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f176e07e [32m200[0m 1.284 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/react-dom_client.js?v=f176e07e [32m200[0m 1.462 ms - -[0m
+[0mGET /src/App.tsx?v=XQbUebi1wddvs3EX1WupY [32m200[0m 1.283 ms - -[0m
+[0mGET /src/index.css?v=XQbUebi1wddvs3EX1WupY [32m200[0m 1.562 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-QCHXOAYK.js?v=f176e07e [32m200[0m 1.753 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/vite/dist/client/env.mjs [36m304[0m 1.478 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-WOOG5QLI.js?v=f176e07e [32m200[0m 1.098 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=f176e07e [32m200[0m 5.157 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/wouter.js?v=f176e07e [32m200[0m 1.291 ms - -[0m
+[0mGET /src/lib/queryClient.ts [32m200[0m 1.873 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@tanstack_react-query.js?v=f176e07e [32m200[0m 2.043 ms - -[0m
+[0mGET /src/components/ui/toaster.tsx [32m200[0m 1.560 ms - -[0m
+[0mGET /src/components/ui/tooltip.tsx [32m200[0m 1.134 ms - -[0m
+[0mGET /src/pages/not-found.tsx [32m200[0m 1.557 ms - -[0m
+[0mGET /src/components/DashboardLayout.tsx [32m200[0m 2.002 ms - -[0m
+[0mGET /src/pages/CreateAccount.tsx [32m200[0m 3.530 ms - -[0m
+[0mGET /src/pages/Login.tsx [32m200[0m 1.805 ms - -[0m
+[0mGET /src/pages/SellerDashboard.tsx [32m200[0m 3.696 ms - -[0m
+[0mGET /src/pages/CreateTransaction.tsx [32m200[0m 4.633 ms - -[0m
+[0mGET /src/pages/TransactionDetails.tsx [32m200[0m 2.917 ms - -[0m
+[0mGET /src/pages/PaymentPage.tsx [32m200[0m 1.310 ms - -[0m
+[0mGET /src/pages/PaymentSuccess.tsx [32m200[0m 1.763 ms - -[0m
+[0mGET /src/pages/BuyerConfirmation.tsx [32m200[0m 1.115 ms - -[0m
+[0mGET /src/pages/LandingPage.tsx [32m200[0m 1.240 ms - -[0m
+[0mGET /src/pages/Office.tsx [32m200[0m 2.778 ms - -[0m
+[0mGET /src/pages/Settings.tsx [32m200[0m 1.446 ms - -[0m
+[0mGET /src/pages/Marketplace.tsx [32m200[0m 1.738 ms - -[0m
+[0mGET /src/pages/Notifications.tsx [32m200[0m 1.676 ms - -[0m
+[0mGET /src/hooks/use-toast.ts [32m200[0m 1.395 ms - -[0m
+[0mGET /src/components/ui/toast.tsx [32m200[0m 0.954 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-KBTYAULA.js?v=f176e07e [32m200[0m 0.819 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/react.js?v=f176e07e [32m200[0m 1.051 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=f176e07e [32m200[0m 0.962 ms - -[0m
+[0mGET /src/lib/utils.ts [32m200[0m 1.069 ms - -[0m
+[0mGET /src/components/ui/card.tsx [32m200[0m 1.024 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/lucide-react.js?v=f176e07e [32m200[0m 2.516 ms - -[0m
+[0mGET /src/components/AppSidebar.tsx [32m200[0m 1.052 ms - -[0m
+[0mGET /src/components/ui/sidebar.tsx [32m200[0m 2.816 ms - -[0m
+[0mGET /src/components/ui/button.tsx [32m200[0m 1.134 ms - -[0m
+[0mGET /src/components/ui/checkbox.tsx [32m200[0m 0.996 ms - -[0m
+[0mGET /src/components/ui/input.tsx [32m200[0m 1.022 ms - -[0m
+[0mGET /src/components/ui/label.tsx [32m200[0m 1.538 ms - -[0m
+[0mGET /src/components/ui/select.tsx [32m200[0m 0.906 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/react-hook-form.js?v=f176e07e [32m200[0m 0.683 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@hookform_resolvers_zod.js?v=f176e07e [32m200[0m 0.681 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/shared/schema.ts [32m200[0m 1.198 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/zod.js?v=f176e07e [32m200[0m 1.552 ms - -[0m
+[0mGET /src/components/ui/tabs.tsx [32m200[0m 1.371 ms - -[0m
+[0mGET /src/components/ui/badge.tsx [32m200[0m 1.190 ms - -[0m
+[0mGET /src/components/StatisticsCard.tsx [32m200[0m 1.073 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/recharts.js?v=f176e07e [32m200[0m 3.427 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/date-fns.js?v=f176e07e [32m200[0m 1.639 ms - -[0m
+[0mGET /src/components/ui/textarea.tsx [32m200[0m 2.857 ms - -[0m
+[0mGET /src/components/TransactionAcceptDialog.tsx [32m200[0m 0.684 ms - -[0m
+[0mGET /src/components/ui/table.tsx [32m200[0m 1.044 ms - -[0m
+[0mGET /src/components/ui/dialog.tsx [32m200[0m 1.498 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-toast.js?v=f176e07e [32m200[0m 1.025 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/class-variance-authority.js?v=f176e07e [32m200[0m 0.961 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-AY4XNGKM.js?v=f176e07e [32m200[0m 1.248 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-R5YVGTHA.js?v=f176e07e [32m200[0m 1.125 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-BHADYF3B.js?v=f176e07e [32m200[0m 1.488 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-APZ5XZMQ.js?v=f176e07e [32m200[0m 1.034 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-USOVV45I.js?v=f176e07e [32m200[0m 0.977 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-FY7XUFXW.js?v=f176e07e [32m200[0m 1.036 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-7SUNRGEF.js?v=f176e07e [32m200[0m 1.057 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-BOL2CCOG.js?v=f176e07e [32m200[0m 0.763 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-EVLBUYTV.js?v=f176e07e [32m200[0m 0.992 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/clsx.js?v=f176e07e [32m200[0m 1.805 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/tailwind-merge.js?v=f176e07e [32m200[0m 2.505 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-slot.js?v=f176e07e [32m200[0m 0.721 ms - -[0m
+[0mGET /src/hooks/use-mobile.tsx [32m200[0m 1.353 ms - -[0m
+[0mGET /src/components/ui/separator.tsx [32m200[0m 1.311 ms - -[0m
+[0mGET /src/components/ui/sheet.tsx [32m200[0m 1.213 ms - -[0m
+[0mGET /src/components/ui/skeleton.tsx [32m200[0m 0.649 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-checkbox.js?v=f176e07e [32m200[0m 1.075 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-label.js?v=f176e07e [32m200[0m 1.254 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-select.js?v=f176e07e [32m200[0m 1.026 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-4BFJKWC4.js?v=f176e07e [32m200[0m 1.586 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/drizzle-orm.js?v=f176e07e [32m200[0m 2.360 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/drizzle-orm_pg-core.js?v=f176e07e [32m200[0m 1.117 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/drizzle-zod.js?v=f176e07e [32m200[0m 0.876 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-WGQNECLP.js?v=f176e07e [32m200[0m 1.265 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=f176e07e [32m200[0m 1.430 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-dialog.js?v=f176e07e [32m200[0m 0.663 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-HYQ42P6R.js?v=f176e07e [32m200[0m 0.916 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-U7P2NEEE.js?v=f176e07e [32m200[0m 1.696 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-separator.js?v=f176e07e [32m200[0m 2.230 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-43G6IMPT.js?v=f176e07e [32m200[0m 1.095 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-4RO2SXZU.js?v=f176e07e [32m200[0m 0.893 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-V6YWVKQP.js?v=f176e07e [32m200[0m 2.942 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-KSDPB6MD.js?v=f176e07e [32m200[0m 3.644 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-FQZB52Q7.js?v=f176e07e [32m200[0m 4.749 ms - -[0m
+[0mGET /api/user [33m401[0m 0.568 ms - 31[0m
+9:17:08 PM [express] GET /api/user 401 in 0ms :: {"message":"Not authenticated"}
+[0mGET /favicon.ico [32m200[0m 12.968 ms - -[0m
+[0mGET /figmaAssets/group-2721.png [36m304[0m 1.540 ms - -[0m
+[0mGET /figmaAssets/material-symbols-shield.svg [36m304[0m 2.131 ms - -[0m
+[0mGET /figmaAssets/frame-1000003642.svg [36m304[0m 2.937 ms - -[0m
+[0mGET /figmaAssets/frame-1000003645.svg [36m304[0m 1.385 ms - -[0m
+[0mGET /figmaAssets/frame.svg [36m304[0m 2.014 ms - -[0m
+[0mGET /favicon.ico [32m200[0m 11.272 ms - -[0m
+[0mGET /api/user [36m304[0m 1202.277 ms - -[0m
+9:20:35 PM [express] GET /api/user 304 in 2ms :: {"user":{"id":"jxl9R1jawoPTvG6KvdQ2","email":"chimb…
+[0mGET /favicon.ico [32m200[0m 921.606 ms - -[0m
+[0mGET /api/transactions/id/i2GqzXEatf84rNfi1F9b [36m304[0m 1503.870 ms - -[0m
+9:20:36 PM [express] GET /api/transactions/id/i2GqzXEatf84rNfi1F9b 304 in 277ms :: {"transaction":{"…
+Initializing payment for user: {
+  id: 'jxl9R1jawoPTvG6KvdQ2',
+  email: 'chimbunnamunwachinaemere@gmail.com',
+  firstName: 'chi',
+  lastName: 'chi'
+}
+Received transactionId: i2GqzXEatf84rNfi1F9b
+Found transaction: {
+  id: 'i2GqzXEatf84rNfi1F9b',
+  sellerId: 'QLZqH2aAZME2AeOwBHgy',
+  buyerEmail: 'chimbunnamunwachinaemere@gmail.com',
+  itemName: 'chicken',
+  itemDescription: 'item',
+  price: '10000',
+  uniqueLink: 'd3cb0902b79ed0afe4ffbf689aaa056e',
+  commission: '500.00',
+  createdAt: Timestamp { _seconds: 1763313325, _nanoseconds: 429000000 },
+  buyerId: 'jxl9R1jawoPTvG6KvdQ2',
+  acceptedAt: Timestamp { _seconds: 1763313339, _nanoseconds: 677000000 },
+  status: 'active',
+  updatedAt: Timestamp { _seconds: 1763313339, _nanoseconds: 677000000 }
+}
+Calculated total amount: 10500 for price: 10000 commission: 500.00
+Calling initializePayment with params: {
+  email: 'chimbunnamunwachinaemere@gmail.com',
+  amount: 10500,
+  reference: 'TXN-i2GqzXEatf84rNfi1F9b-1763324438025',
+  metadata: { transactionId: 'i2GqzXEatf84rNfi1F9b', itemName: 'chicken' }
+}
+Payment initialized successfully: {
+  status: true,
+  message: 'Authorization URL created',
+  data: {
+    authorization_url: 'https://checkout.paystack.com/cvqjlkzsftpq9b4',
+    access_code: 'cvqjlkzsftpq9b4',
+    reference: 'TXN-i2GqzXEatf84rNfi1F9b-1763324438025'
+  }
+}
+[0mPOST /api/payments/initialize [32m200[0m 1456.390 ms - 122[0m
+9:20:38 PM [express] POST /api/payments/initialize 200 in 1162ms :: {"authorization_url":"https://ch…
+Health check called for user: unauthenticated
+[0mGET /api/health [32m200[0m 0.571 ms - 93[0m
+9:27:27 PM [express] GET /api/health 200 in 1ms :: {"status":"healthy","timestamp":"2025-11-16T20:27…
+Health check called for user: unauthenticated
+[0mGET /api/health [32m200[0m 0.925 ms - 93[0m
+9:37:26 PM [express] GET /api/health 200 in 1ms :: {"status":"healthy","timestamp":"2025-11-16T20:37…
+Health check called for user: unauthenticated
+[0mGET /api/health [32m200[0m 1.106 ms - 93[0m
+9:52:16 PM [express] GET /api/health 200 in 1ms :: {"status":"healthy","timestamp":"2025-11-16T20:52…
+[0mPOST /api/login [32m200[0m 1513.204 ms - 104[0m
+9:53:45 PM [express] POST /api/login 200 in 1513ms :: {"user":{"id":"lcc5a4FoU3eMIXCH6BaD","email":"…
+Initializing payment for user: {
+  id: 'lcc5a4FoU3eMIXCH6BaD',
+  email: 'buyer@example.com',
+  firstName: 'Buyer',
+  lastName: 'User'
+}
+Received transactionId: 7ccc7201b2f5dfa91b9233e371cf4093
+Found transaction: {
+  id: 'njN2N0ojAvZv2tB3cxZN',
+  sellerId: 'qS0K5uTAXISqi2xpdcuU',
+  buyerEmail: 'buyer@example.com',
+  itemName: 'Test Item',
+  itemDescription: 'Test Description',
+  price: '100.00',
+  uniqueLink: '7ccc7201b2f5dfa91b9233e371cf4093',
+  commission: '5.00',
+  createdAt: Timestamp { _seconds: 1763198865, _nanoseconds: 17000000 },
+  buyerId: 'lcc5a4FoU3eMIXCH6BaD',
+  acceptedAt: Timestamp { _seconds: 1763199048, _nanoseconds: 981000000 },
+  status: 'active',
+  updatedAt: Timestamp { _seconds: 1763199048, _nanoseconds: 981000000 }
+}
+Calculated total amount: 105 for price: 100.00 commission: 5.00
+Calling initializePayment with params: {
+  email: 'buyer@example.com',
+  amount: 105,
+  reference: 'TXN-njN2N0ojAvZv2tB3cxZN-1763326426860',
+  metadata: { transactionId: 'njN2N0ojAvZv2tB3cxZN', itemName: 'Test Item' }
+}
+Payment initialized successfully: {
+  status: true,
+  message: 'Authorization URL created',
+  data: {
+    authorization_url: 'https://checkout.paystack.com/5ezslivfsa6zo49',
+    access_code: '5ezslivfsa6zo49',
+    reference: 'TXN-njN2N0ojAvZv2tB3cxZN-1763326426860'
+  }
+}
+[0mPOST /api/payments/initialize [32m200[0m 1905.761 ms - 122[0m
+9:53:47 PM [express] POST /api/payments/initialize 200 in 1450ms :: {"authorization_url":"https://ch…
+[0mPOST /api/login [32m200[0m 1162.464 ms - 123[0m
+10:02:51 PM [express] POST /api/login 200 in 1156ms :: {"user":{"id":"QLZqH2aAZME2AeOwBHgy","email":"…
+[0mGET /api/user [36m304[0m 289.972 ms - -[0m
+10:02:51 PM [express] GET /api/user 304 in 1ms :: {"user":{"id":"QLZqH2aAZME2AeOwBHgy","email":"chimj…
+[0mGET /favicon.ico [32m200[0m 812.835 ms - -[0m
+[0mGET /api/notifications/unread-count [36m304[0m 780.886 ms - -[0m
+10:02:52 PM [express] GET /api/notifications/unread-count 304 in 493ms :: {"count":0}
+Dashboard transactions-over-time called for user: QLZqH2aAZME2AeOwBHgy
+Dashboard stats called for user: QLZqH2aAZME2AeOwBHgy
+Payouts called for user: QLZqH2aAZME2AeOwBHgy
+Dashboard recent-activities called for user: QLZqH2aAZME2AeOwBHgy
+Dashboard transactions-over-time result: [
+  { month: 'January', amount: 0 },
+  { month: 'February', amount: 0 },
+  { month: 'March', amount: 0 },
+  { month: 'April', amount: 0 },
+  { month: 'May', amount: 0 },
+  { month: 'June', amount: 0 },
+  { month: 'July', amount: 0 },
+  { month: 'August', amount: 0 },
+  { month: 'September', amount: 0 },
+  { month: 'October', amount: 0 },
+  { month: 'November', amount: 330000 },
+  { month: 'December', amount: 0 }
+]
+[0mGET /api/dashboard/transactions-over-time [36m304[0m 1117.357 ms - -[0m
+10:02:53 PM [express] GET /api/dashboard/transactions-over-time 304 in 393ms :: {"data":[{"month":"Ja…
+[0mGET /api/transactions/buyer [33m404[0m 1486.863 ms - 35[0m
+10:02:53 PM [express] GET /api/transactions/buyer 404 in 734ms :: {"message":"Transaction not found"}
+Payouts result: []
+[0mGET /api/payouts [36m304[0m 1526.026 ms - -[0m
+10:02:53 PM [express] GET /api/payouts 304 in 773ms :: {"payouts":[]}
+Dashboard stats result: {
+  totalTransactions: 33,
+  successRate: 0,
+  escrowVolume: 100000,
+  totalTransactionsChange: 100,
+  successRateChange: 0,
+  escrowVolumeChange: 100
+}
+[0mGET /api/dashboard/stats [36m304[0m 1643.520 ms - -[0m
+10:02:53 PM [express] GET /api/dashboard/stats 304 in 868ms :: {"totalTransactions":33,"successRate":…
+Dashboard recent-activities result: [
+  {
+    id: 'i2GqzXEatf84rNfi1F9b',
+    activity: '',
+    details: '',
+    time: '3 hours ago'
+  },
+  {
+    id: 'Hxdr7SKbpJzM14dkoBit',
+    activity: 'Transaction #Hxdr',
+    details: 'Payment received, transfer asset',
+    time: '4 hours ago'
+  },
+  {
+    id: 'PDzOqbBU94lFWs64qFgx',
+    activity: 'Transaction #PDzO',
+    details: 'Asset transferred - confirm receipt to complete',
+    time: '2 days ago'
+  },
+  {
+    id: 'g3IxEo8IusqyFWH9V1KE',
+    activity: 'Transaction #g3Ix',
+    details: 'Asset transferred, awaiting buyer confirmation',
+    time: '2 days ago'
+  },
+  {
+    id: 'VNAub4I1OpUNGYhgRMXF',
+    activity: 'Transaction #VNAu',
+    details: 'Payment received, transfer asset',
+    time: '6 days ago'
+  },
+  {
+    id: 'WeQ17DziTfEHqF2dQy7L',
+    activity: 'Transaction #WeQ1',
+    details: 'Payment received, transfer asset',
+    time: '7 days ago'
+  },
+  {
+    id: 'Lms8qd94G1Ulfgdv9a5E',
+    activity: 'Transaction #Lms8',
+    details: 'Payment received, transfer asset',
+    time: '9 days ago'
+  },
+  {
+    id: '1HmH0OWfE4ErIUL8IFwE',
+    activity: 'Transaction #1HmH',
+    details: 'Payment received, transfer asset',
+    time: '9 days ago'
+  },
+  {
+    id: '8DhashvGnEHv0lJ0hclm',
+    activity: 'Transaction #8Dha',
+    details: 'Payment received, transfer asset',
+    time: '9 days ago'
+  },
+  {
+    id: 'fSN841Fepnp2Jd77mBsB',
+    activity: 'Transaction #fSN8',
+    details: 'Payment received, transfer asset',
+    time: '9 days ago'
+  }
+]
+[0mGET /api/dashboard/recent-activities [32m200[0m 1892.586 ms - 1258[0m
+10:02:54 PM [express] GET /api/dashboard/recent-activities 200 in 1115ms :: {"activities":[{"id":"i2G…
+[0mGET /src/main.tsx?v=6M3XkKR9bHFtWGStX28rC [32m200[0m 929.719 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=f176e07e [32m200[0m 328.548 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/react-dom_client.js?v=f176e07e [32m200[0m 770.770 ms - -[0m
+[0mGET /src/App.tsx?v=6M3XkKR9bHFtWGStX28rC [32m200[0m 483.305 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-QCHXOAYK.js?v=f176e07e [32m200[0m 764.610 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-WOOG5QLI.js?v=f176e07e [32m200[0m 453.626 ms - -[0m
+[0mGET /src/index.css?v=6M3XkKR9bHFtWGStX28rC [32m200[0m 795.361 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-RPCDYKBN.js?v=f176e07e [32m200[0m 656.125 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/wouter.js?v=f176e07e [32m200[0m 752.048 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/react.js?v=f176e07e [32m200[0m 455.356 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@tanstack_react-query.js?v=f176e07e [32m200[0m 751.449 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/lucide-react.js?v=f176e07e [32m200[0m 760.749 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-tooltip.js?v=f176e07e [32m200[0m 768.457 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/react-hook-form.js?v=f176e07e [32m200[0m 449.723 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@hookform_resolvers_zod.js?v=f176e07e [32m200[0m 658.609 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/zod.js?v=f176e07e [32m200[0m 756.203 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/date-fns.js?v=f176e07e [32m200[0m 462.878 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/clsx.js?v=f176e07e [32m200[0m 767.495 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/tailwind-merge.js?v=f176e07e [32m200[0m 763.423 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-toast.js?v=f176e07e [32m200[0m 449.064 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/recharts.js?v=f176e07e [32m200[0m 804.226 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/class-variance-authority.js?v=f176e07e [32m200[0m 749.318 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-slot.js?v=f176e07e [32m200[0m 756.566 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-label.js?v=f176e07e [32m200[0m 434.070 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/drizzle-orm.js?v=f176e07e [32m200[0m 748.980 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/drizzle-orm_pg-core.js?v=f176e07e [32m200[0m 716.487 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-checkbox.js?v=f176e07e [32m200[0m 757.373 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/drizzle-zod.js?v=f176e07e [32m200[0m 394.607 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-tabs.js?v=f176e07e [32m200[0m 729.788 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-dialog.js?v=f176e07e [32m200[0m 748.320 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-select.js?v=f176e07e [32m200[0m 435.696 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/@radix-ui_react-separator.js?v=f176e07e [32m200[0m 737.868 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-KBTYAULA.js?v=f176e07e [32m200[0m 761.979 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-AY4XNGKM.js?v=f176e07e [32m200[0m 730.500 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-R5YVGTHA.js?v=f176e07e [32m200[0m 397.151 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-BHADYF3B.js?v=f176e07e [32m200[0m 739.747 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-APZ5XZMQ.js?v=f176e07e [32m200[0m 738.183 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-USOVV45I.js?v=f176e07e [32m200[0m 448.287 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-FY7XUFXW.js?v=f176e07e [32m200[0m 733.930 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-7SUNRGEF.js?v=f176e07e [32m200[0m 743.685 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-BOL2CCOG.js?v=f176e07e [32m200[0m 732.794 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-EVLBUYTV.js?v=f176e07e [32m200[0m 397.218 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-4BFJKWC4.js?v=f176e07e [32m200[0m 738.143 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-WGQNECLP.js?v=f176e07e [32m200[0m 749.328 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-U7P2NEEE.js?v=f176e07e [32m200[0m 449.033 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-HYQ42P6R.js?v=f176e07e [32m200[0m 738.209 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-KSDPB6MD.js?v=f176e07e [32m200[0m 748.801 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-FQZB52Q7.js?v=f176e07e [32m200[0m 729.099 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-43G6IMPT.js?v=f176e07e [32m200[0m 387.118 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-4RO2SXZU.js?v=f176e07e [32m200[0m 724.920 ms - -[0m
+[0mGET /@fs/C:/Users/user/Downloads/xcrow%20(1)/Escrow-Create-Account/node_modules/.vite/deps/chunk-V6YWVKQP.js?v=f176e07e [32m200[0m 758.885 ms - -[0m
+[0mGET /api/user [36m304[0m 280.002 ms - -[0m
+10:46:20 PM [express] GET /api/user 304 in 4ms :: {"user":{"id":"QLZqH2aAZME2AeOwBHgy","email":"chimj…
+[0mGET /favicon.ico [32m200[0m 802.747 ms - -[0m
+Dashboard transactions-over-time called for user: QLZqH2aAZME2AeOwBHgy
+Dashboard stats called for user: QLZqH2aAZME2AeOwBHgy
+Payouts called for user: QLZqH2aAZME2AeOwBHgy
+[0mGET /api/notifications/unread-count [36m304[0m 896.819 ms - -[0m
+10:46:21 PM [express] GET /api/notifications/unread-count 304 in 411ms :: {"count":0}
+Dashboard recent-activities called for user: QLZqH2aAZME2AeOwBHgy
+Dashboard transactions-over-time result: [
+  { month: 'January', amount: 0 },
+  { month: 'February', amount: 0 },
+  { month: 'March', amount: 0 },
+  { month: 'April', amount: 0 },
+  { month: 'May', amount: 0 },
+  { month: 'June', amount: 0 },
+  { month: 'July', amount: 0 },
+  { month: 'August', amount: 0 },
+  { month: 'September', amount: 0 },
+  { month: 'October', amount: 0 },
+  { month: 'November', amount: 330000 },
+  { month: 'December', amount: 0 }
+]
+[0mGET /api/dashboard/transactions-over-time [36m304[0m 1409.598 ms - -[0m
+10:46:22 PM [express] GET /api/dashboard/transactions-over-time 304 in 666ms :: {"data":[{"month":"Ja…
+Payouts result: []
+[0mGET /api/payouts [36m304[0m 1503.209 ms - -[0m
+10:46:22 PM [express] GET /api/payouts 304 in 649ms :: {"payouts":[]}
+Dashboard stats result: {
+  totalTransactions: 33,
+  successRate: 0,
+  escrowVolume: 100000,
+  totalTransactionsChange: 100,
+  successRateChange: 0,
+  escrowVolumeChange: 100
+}
+[0mGET /api/dashboard/stats [36m304[0m 1609.294 ms - -[0m
+10:46:22 PM [express] GET /api/dashboard/stats 304 in 855ms :: {"totalTransactions":33,"successRate":…
+[0mGET /api/transactions/buyer [33m404[0m 1608.683 ms - 35[0m
+10:46:22 PM [express] GET /api/transactions/buyer 404 in 745ms :: {"message":"Transaction not found"}
+Dashboard recent-activities result: [
+  {
+    id: 'i2GqzXEatf84rNfi1F9b',
+    activity: '',
+    details: '',
+    time: '4 hours ago'
+  },
+  {
+    id: 'Hxdr7SKbpJzM14dkoBit',
+    activity: 'Transaction #Hxdr',
+    details: 'Payment received, transfer asset',
+    time: '5 hours ago'
+  },
+  {
+    id: 'PDzOqbBU94lFWs64qFgx',
+    activity: 'Transaction #PDzO',
+    details: 'Asset transferred - confirm receipt to complete',
+    time: '2 days ago'
+  },
+  {
+    id: 'g3IxEo8IusqyFWH9V1KE',
+    activity: 'Transaction #g3Ix',
+    details: 'Asset transferred, awaiting buyer confirmation',
+    time: '2 days ago'
+  },
+  {
+    id: 'VNAub4I1OpUNGYhgRMXF',
+    activity: 'Transaction #VNAu',
+    details: 'Payment received, transfer asset',
+    time: '6 days ago'
+  },
+  {
+    id: 'WeQ17DziTfEHqF2dQy7L',
+    activity: 'Transaction #WeQ1',
+    details: 'Payment received, transfer asset',
+    time: '7 days ago'
+  },
+  {
+    id: 'Lms8qd94G1Ulfgdv9a5E',
+    activity: 'Transaction #Lms8',
+    details: 'Payment received, transfer asset',
+    time: '9 days ago'
+  },
+  {
+    id: '1HmH0OWfE4ErIUL8IFwE',
+    activity: 'Transaction #1HmH',
+    details: 'Payment received, transfer asset',
+    time: '9 days ago'
+  },
+  {
+    id: '8DhashvGnEHv0lJ0hclm',
+    activity: 'Transaction #8Dha',
+    details: 'Payment received, transfer asset',
+    time: '9 days ago'
+  },
+  {
+    id: 'fSN841Fepnp2Jd77mBsB',
+    activity: 'Transaction #fSN8',
+    details: 'Payment received, transfer asset',
+    time: '9 days ago'
+  }
+]
+[0mGET /api/dashboard/recent-activities [32m200[0m 1539.235 ms - 1258[0m
+10:46:22 PM [express] GET /api/dashboard/recent-activities 200 in 800ms :: {"activities":[{"id":"i2Gq…

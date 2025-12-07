@@ -1,15 +1,18 @@
 import axios from "axios";
+import { createHmac } from "crypto";
 
 const PAYSTACK_BASE_URL = "https://api.paystack.co";
 
-if (!process.env.PAYSTACK_SECRET_KEY) {
-  console.warn("PAYSTACK_SECRET_KEY not set - payment features will not work");
+const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY;
+
+if (!PAYSTACK_SECRET_KEY) {
+  throw new Error("PAYSTACK_SECRET_KEY environment variable is required");
 }
 
 const paystackClient = axios.create({
   baseURL: PAYSTACK_BASE_URL,
   headers: {
-    Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+    Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
     "Content-Type": "application/json",
   },
 });
@@ -63,11 +66,12 @@ export async function initializePayment(
         amount: params.amount * 100, // Convert to kobo
         reference: params.reference,
         metadata: params.metadata,
-        callback_url: `${process.env.VITE_API_URL || ""}/payment-callback`,
+        callback_url: `${process.env.VITE_API_URL}/payment-callback`,
       }
     );
     return response.data;
   } catch (error: any) {
+    console.error("Paystack initialize payment error:", error.response?.data || error.message);
     throw new Error(
       error.response?.data?.message || "Failed to initialize payment"
     );
@@ -83,6 +87,7 @@ export async function verifyPayment(
     );
     return response.data;
   } catch (error: any) {
+    console.error("Paystack verify payment error:", error.response?.data || error.message);
     throw new Error(
       error.response?.data?.message || "Failed to verify payment"
     );
@@ -93,9 +98,11 @@ export function validatePaystackWebhook(
   signature: string,
   body: string
 ): boolean {
-  const crypto = require("crypto");
-  const hash = crypto
-    .createHmac("sha512", process.env.PAYSTACK_SECRET_KEY || "")
+  if (!PAYSTACK_SECRET_KEY) {
+    throw new Error("PAYSTACK_SECRET_KEY environment variable is required for webhook validation");
+  }
+
+  const hash = createHmac("sha512", PAYSTACK_SECRET_KEY)
     .update(body)
     .digest("hex");
   return hash === signature;

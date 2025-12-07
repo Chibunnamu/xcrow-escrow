@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -15,6 +16,7 @@ const transactionSchema = z.object({
   itemName: z.string().min(1, "Item name is required"),
   itemDescription: z.string().min(1, "Item description is required"),
   price: z.string().min(1, "Price is required"),
+  escrowCategory: z.string().min(1, "Escrow category is required"),
 });
 
 type TransactionForm = z.infer<typeof transactionSchema>;
@@ -27,6 +29,10 @@ export const CreateTransaction = (): JSX.Element => {
     queryKey: ["/api/user"],
   });
 
+  const { data: categoriesData } = useQuery({
+    queryKey: ["/api/escrow-categories"],
+  });
+
   const form = useForm<TransactionForm>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
@@ -34,6 +40,7 @@ export const CreateTransaction = (): JSX.Element => {
       itemName: "",
       itemDescription: "",
       price: "",
+      escrowCategory: "",
     },
   });
 
@@ -47,8 +54,11 @@ export const CreateTransaction = (): JSX.Element => {
         title: "Transaction created",
         description: "Share the link with your buyer",
       });
+      // Invalidate both seller transactions and the specific transaction query
       queryClient.invalidateQueries({ queryKey: ["/api/transactions/seller"] });
-      setLocation(`/transaction/${response.transaction.uniqueLink}`);
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions/id", response.transaction.id] });
+      // Stay on the transaction details page to show the link and allow copying
+      setLocation(`/transaction/${response.transaction.id}`);
     },
     onError: (error: any) => {
       toast({
@@ -60,7 +70,14 @@ export const CreateTransaction = (): JSX.Element => {
   });
 
   const onSubmit = form.handleSubmit((data) => {
-    createTransactionMutation.mutate(data);
+    // Find the selected category to get timeframe
+    const selectedCategory = (categoriesData as any)?.categories?.find((cat: any) => cat.name === data.escrowCategory);
+    const transactionData = {
+      ...data,
+      minTimeHours: selectedCategory?.minTime || 24,
+      maxTimeHours: selectedCategory?.maxTime || 168,
+    };
+    createTransactionMutation.mutate(transactionData);
   });
 
   if (!userData) {
@@ -134,6 +151,28 @@ export const CreateTransaction = (): JSX.Element => {
               />
               {form.formState.errors.price && (
                 <p className="text-sm text-red-500">{form.formState.errors.price.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="escrowCategory">Escrow Category *</Label>
+              <Select
+                value={form.watch("escrowCategory")}
+                onValueChange={(value) => form.setValue("escrowCategory", value)}
+              >
+                <SelectTrigger className="h-12">
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {(categoriesData as any)?.categories?.map((category: any) => (
+                    <SelectItem key={category.id} value={category.name}>
+                      {category.name} - {category.typicalTimeFrame}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {form.formState.errors.escrowCategory && (
+                <p className="text-sm text-red-500">{form.formState.errors.escrowCategory.message}</p>
               )}
             </div>
 

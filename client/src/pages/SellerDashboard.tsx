@@ -2,20 +2,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { StatisticsCard } from "@/components/StatisticsCard";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Users, CheckCircle, DollarSign, Loader2, Info, Copy } from "lucide-react";
+import { Users, CheckCircle, DollarSign, Loader2, Info, Copy, Search, ExternalLink } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { type Transaction, type Payout } from "@shared/schema";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
+import { useState } from "react";
+import { firestoreTimestampToDate } from "../utils/firestoreTimestampToDate";
 
 export const SellerDashboard = (): JSX.Element => {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
+  const [transactionLink, setTransactionLink] = useState("");
 
   const { data: userData } = useQuery<{ user: any } | null>({
     queryKey: ["/api/user"],
@@ -46,7 +50,7 @@ export const SellerDashboard = (): JSX.Element => {
   });
 
   const { data: purchases, isLoading: purchasesLoading } = useQuery<Transaction[]>({
-    queryKey: ["/api/transactions/buyer", userData?.user?.id],
+    queryKey: ["/api/transactions/buyer"],
     enabled: !!userData?.user,
   });
 
@@ -64,7 +68,7 @@ export const SellerDashboard = (): JSX.Element => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/transactions/buyer", userData?.user?.id] });
+      queryClient.invalidateQueries({ queryKey: ["/api/transactions/buyer"] });
       toast({
         title: "Funds Released",
         description: "The funds have been successfully released to the seller.",
@@ -129,8 +133,118 @@ export const SellerDashboard = (): JSX.Element => {
     });
   };
 
+  const handleTransactionSearch = () => {
+    const link = transactionLink.trim();
+    if (!link) return;
+
+    // Handle different types of links
+    try {
+      // Check if it's a full URL
+      let url;
+      try {
+        url = new URL(link);
+      } catch {
+        // Not a full URL, treat as relative path or ID
+        url = null;
+      }
+
+      let path = url ? url.pathname : link;
+
+      // Remove leading slash if present
+      if (path.startsWith('/')) {
+        path = path.substring(1);
+      }
+
+      // Determine where to navigate based on the path
+      if (path.includes('/payment-success/') || path.startsWith('payment-success/')) {
+        // Payment success page - extract reference
+        const reference = path.split('/payment-success/')[1] || path.split('payment-success/')[1];
+        if (reference) {
+          setLocation(`/payment-success/${reference}`);
+          return;
+        }
+      }
+
+      if (path.includes('/payment/') || path.startsWith('payment/')) {
+        // Payment page - extract link
+        const paymentLink = path.split('/payment/')[1] || path.split('payment/')[1];
+        if (paymentLink) {
+          setLocation(`/payment/${paymentLink}`);
+          return;
+        }
+      }
+
+      if (path.includes('/buyer-confirm/') || path.startsWith('buyer-confirm/')) {
+        // Buyer confirmation page - extract link
+        const confirmLink = path.split('/buyer-confirm/')[1] || path.split('buyer-confirm/')[1];
+        if (confirmLink) {
+          setLocation(`/buyer-confirm/${confirmLink}`);
+          return;
+        }
+      }
+
+      if (path.includes('/transaction/') || path.startsWith('transaction/')) {
+        // Transaction details page - extract link
+        const transactionId = path.split('/transaction/')[1] || path.split('transaction/')[1];
+        if (transactionId) {
+          setLocation(`/transaction/${transactionId}`);
+          return;
+        }
+      }
+
+      // Default: assume it's a transaction link/ID and go to transaction details
+      setLocation(`/transaction/${link}`);
+
+    } catch (error) {
+      console.error('Error parsing transaction link:', error);
+      // Fallback to transaction details
+      setLocation(`/transaction/${link}`);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleTransactionSearch();
+    }
+  };
+
   return (
     <div className="p-8">
+      {/* Transaction Search Section */}
+      <Card className="mb-8 bg-gradient-to-r from-[#493d9e] to-[#5a4fc8] border-none">
+        <CardContent className="p-8">
+          <div className="text-center">
+            <h2 className="text-2xl font-bold text-white mb-4">
+              Have a Transaction Link?
+            </h2>
+            <p className="text-lg text-gray-200 mb-6">
+              Enter your transaction ID or link to view and manage the transaction
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto">
+              <Input
+                type="text"
+                placeholder="Enter transaction ID, link, or URL..."
+                value={transactionLink}
+                onChange={(e) => setTransactionLink(e.target.value)}
+                onKeyPress={handleKeyPress}
+                className="flex-1 h-12 text-lg bg-white border-0 focus:ring-2 focus:ring-white/50"
+              />
+              <Button
+                onClick={handleTransactionSearch}
+                disabled={!transactionLink.trim()}
+                className="h-12 px-6 bg-white text-[#493d9e] hover:bg-gray-100 font-semibold"
+              >
+                <Search className="w-5 h-5 mr-2" />
+                Go to Link
+              </Button>
+            </div>
+            <p className="text-sm text-gray-200 mt-2 text-center">
+              Supports transaction IDs, payment links, confirmation links, and full URLs
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Welcome Banner */}
       <Card className="mb-8 bg-gradient-to-r from-[#f8f9ff] to-white border-none">
         <CardContent className="p-8">
@@ -293,6 +407,9 @@ export const SellerDashboard = (): JSX.Element => {
                         <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
                           Time
                         </th>
+                        <th className="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                          Action
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -308,11 +425,22 @@ export const SellerDashboard = (): JSX.Element => {
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
                               {activity.time}
                             </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setLocation(`/transaction/${activity.id}`)}
+                                className="text-[#493d9e] border-[#493d9e] hover:bg-[#493d9e] hover:text-white"
+                              >
+                                <ExternalLink className="w-4 h-4 mr-1" />
+                                View Transaction
+                              </Button>
+                            </td>
                           </tr>
                         ))
                       ) : (
                         <tr>
-                          <td colSpan={3} className="px-6 py-8 text-center text-sm text-gray-500">
+                          <td colSpan={4} className="px-6 py-8 text-center text-sm text-gray-500">
                             No recent activities. Create your first transaction to get started.
                           </td>
                         </tr>
@@ -392,7 +520,11 @@ export const SellerDashboard = (): JSX.Element => {
                               </div>
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600" data-testid={`payout-date-${payout.id}`}>
-                              {format(new Date(payout.createdAt), "MMM dd, yyyy HH:mm")}
+                              {(() => {
+                                const date = firestoreTimestampToDate(payout.createdAt);
+                                if (!date) return "Invalid Date";
+                                return format(date, "MMM dd, yyyy HH:mm");
+                              })()}
                             </td>
                             <td className="px-6 py-4 text-sm text-gray-600">
                               {payout.paystackReference ? (

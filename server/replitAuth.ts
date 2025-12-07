@@ -8,7 +8,8 @@ import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
 if (!process.env.REPLIT_DOMAINS) {
-  throw new Error("Environment variable REPLIT_DOMAINS not provided");
+  console.warn("REPLIT_DOMAINS not provided, Replit auth disabled");
+  return; // Early return to disable Replit auth
 }
 
 const getOidcConfig = memoize(
@@ -64,6 +65,11 @@ async function upsertUser(claims: any) {
 }
 
 export async function setupReplitAuth(app: Express) {
+  if (!process.env.REPLIT_DOMAINS) {
+    console.warn("REPLIT_DOMAINS not provided, Replit auth disabled");
+    return; // Early return to disable Replit auth
+  }
+
   const config = await getOidcConfig();
 
   const verify: VerifyFunction = async (

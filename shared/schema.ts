@@ -31,7 +31,7 @@ export const users = pgTable("users", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-export const transactionStatuses = ["pending", "paid", "asset_transferred", "completed"] as const;
+export const transactionStatuses = ["pending", "active", "paid", "asset_transferred", "completed", "cancelled"] as const;
 export type TransactionStatus = typeof transactionStatuses[number];
 
 export const transactions = pgTable("transactions", {
@@ -46,6 +46,9 @@ export const transactions = pgTable("transactions", {
   status: text("status").notNull().default("pending").$type<TransactionStatus>(),
   paystackReference: text("paystack_reference"),
   uniqueLink: text("unique_link").notNull().unique(),
+  escrowCategory: text("escrow_category"),
+  minTimeHours: integer("min_time_hours"),
+  maxTimeHours: integer("max_time_hours"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -82,13 +85,15 @@ export const upsertUserSchema = z.object({
   profileImageUrl: z.string().optional().nullable(),
 });
 
-export const insertTransactionSchema = createInsertSchema(transactions).pick({
-  sellerId: true,
-  buyerEmail: true,
-  itemName: true,
-  itemDescription: true,
-  price: true,
-  uniqueLink: true,
+export const insertTransactionSchema = z.object({
+  sellerId: z.string(),
+  buyerEmail: z.string().email(),
+  itemName: z.string().min(1),
+  itemDescription: z.string().min(1),
+  price: z.string().regex(/^\d+(\.\d{1,2})?$/),
+  escrowCategory: z.string().optional(),
+  minTimeHours: z.number().optional(),
+  maxTimeHours: z.number().optional(),
 });
 
 export const updateTransactionStatusSchema = z.object({
@@ -124,6 +129,57 @@ export const payouts = pgTable("payouts", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+export const notificationTypes = [
+  // User Events
+  "user_registered",
+  "user_login",
+  "user_profile_updated",
+  "user_bank_account_updated",
+
+  // Transaction Events
+  "transaction_created",
+  "transaction_accepted",
+  "transaction_paid",
+  "transaction_asset_transferred",
+  "transaction_completed",
+  "transaction_cancelled",
+  "transaction_status_changed",
+
+  // Payment Events
+  "payment_initiated",
+  "payment_successful",
+  "payment_failed",
+  "payment_refunded",
+
+  // Payout Events
+  "payout_initiated",
+  "payout_processing",
+  "payout_successful",
+  "payout_failed",
+
+  // Dispute Events
+  "dispute_created",
+  "dispute_updated",
+  "dispute_resolved",
+  "dispute_closed",
+
+  // System Events
+  "system_maintenance",
+  "security_alert"
+] as const;
+export type NotificationType = typeof notificationTypes[number];
+
+export const notifications = pgTable("notifications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: text("type").notNull().$type<NotificationType>(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  data: jsonb("data"),
+  isRead: integer("is_read").notNull().default(0),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
 export const updateBankAccountSchema = z.object({
   bankCode: z.string(),
   accountNumber: z.string(),
@@ -141,3 +197,13 @@ export type Dispute = typeof disputes.$inferSelect;
 export type UpdateDisputeStatus = z.infer<typeof updateDisputeStatusSchema>;
 export type Payout = typeof payouts.$inferSelect;
 export type UpdateBankAccount = z.infer<typeof updateBankAccountSchema>;
+export type Notification = typeof notifications.$inferSelect;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+
+export const insertNotificationSchema = z.object({
+  userId: z.string(),
+  type: z.enum(notificationTypes),
+  title: z.string(),
+  message: z.string(),
+  data: z.any().optional(),
+});
