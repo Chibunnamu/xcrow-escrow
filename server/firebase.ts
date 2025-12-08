@@ -1,12 +1,11 @@
 import admin from "firebase-admin";
-import * as path from "path";
-import * as fs from "fs";
 
-// Path to the service account key
-const serviceAccountPath = path.join(process.cwd(), "..", "xcrow-b8385-firebase-adminsdk-fbsvc-1730b7e6b2.json");
-
-// Read the service account key
-const serviceAccount = JSON.parse(fs.readFileSync(serviceAccountPath, "utf8"));
+// Read the service account key from environment variable
+const firebaseServiceAccountJson = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+if (!firebaseServiceAccountJson) {
+  throw new Error("FIREBASE_SERVICE_ACCOUNT_JSON environment variable is required");
+}
+const serviceAccount = JSON.parse(firebaseServiceAccountJson);
 
 const firebaseConfig = {
   credential: admin.credential.cert(serviceAccount),
