@@ -8,6 +8,7 @@ import { insertUserSchema, insertTransactionSchema, updateTransactionStatusSchem
 import { randomBytes } from "crypto";
 import { initializePayment, verifyPayment, validatePaystackWebhook } from "./paystack";
 import { listBanks, verifyAccountNumber, createTransferRecipient, initiateTransfer } from "./transfer";
+import { notificationService } from "./email/email_service";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Removed Replit OAuth authentication
@@ -68,6 +69,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         },
       });
 
+      // Send Welcome Email (Always sent)
+      if (user.email && user.firstName) {
+        // We don't await here to not block response? Or we do? 
+        // Plan says await. 
+        await notificationService.sendWelcomeEmail(user.email, user.firstName);
+      }
+
       // Regenerate session to prevent fixation attacks
       req.session.regenerate((err) => {
         if (err) {
@@ -119,6 +127,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             sessionId: req.sessionID
           },
         });
+        
+        // Send Login Alert
+        if (user.emailNotifications) {
+           await notificationService.sendLoginAlert(user.email, user.firstName, req.ip || req.connection.remoteAddress || "Unknown");
+        }
       } catch (notificationError) {
         console.error("Error creating login notification:", notificationError);
         // Don't fail login if notification creation fails
@@ -165,6 +178,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Both OAuth and local users now have a proper User object from deserialize
     const { password, ...userWithoutPassword } = req.user as User;
     res.json({ user: userWithoutPassword });
+  });
+
+  app.post("/api/user/consent", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user as User;
+      const { consent } = req.body;
+      
+      if (typeof consent !== 'boolean') {
+        return res.status(400).json({ message: "Consent must be a boolean" });
+      }
+
+      await storage.updateUserConsent(user.id, consent);
+      res.json({ message: "Consent updated", consent });
+    } catch (error) {
+      next(error);
+    }
   });
 
   // Transaction routes
@@ -218,6 +247,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userAgent: req.get('User-Agent')
         },
       });
+
+      // Send Transaction Created Email to Buyer
+      const buyerUser = await storage.getUserByEmail(transaction.buyerEmail);
+      if (!buyerUser || buyerUser.emailNotifications !== false) {
+         await notificationService.sendTransactionCreated(
+            transaction.buyerEmail, 
+            user.firstName || "Seller", 
+            transaction.itemName, 
+            transaction.price, 
+            `https://xcrowpay.com/transaction/${transaction.uniqueLink}`
+          );
+      }
 
       res.status(201).json({ transaction });
     } catch (error) {
@@ -370,6 +411,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     paymentMethod: "paystack_transfer"
                   },
                 });
+
+                if (seller && seller.emailNotifications) {
+                   await notificationService.sendPayoutCompleted(
+                     seller.email!,
+                     seller.firstName!,
+                     payoutAmount,
+                     existingTransaction.itemName
+                   );
+                }
               } catch (transferError: any) {
                 console.error("Transfer initiation failed:", transferError);
                 await storage.updatePayoutStatus(
@@ -767,6 +817,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
               },
             });
 
+            const sellerUser = await storage.getUser(transaction.sellerId);
+            if (sellerUser && sellerUser.emailNotifications) {
+                await notificationService.sendPaymentMade(
+                  sellerUser.email!,
+                  sellerUser.firstName!,
+                  transaction.buyerEmail, // or buyer name if we had it
+                  transaction.price,
+                  transaction.itemName
+                );
+            }
+
             if (transaction.buyerId) {
               await storage.createNotification({
                 userId: transaction.buyerId,
@@ -800,9 +861,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
             userId: payout.sellerId,
             type: "payout_successful",
             title: "Payout Successful",
-            message: `Your payout of ₦${payout.amount} has been processed successfully.`,
-            data: { payoutId: payout.id, amount: payout.amount },
+            message: "Payout processed via Webhook", 
+            data: { payoutId: payout.id }
           });
+          
+          const seller = await storage.getUser(payout.sellerId);
+          if (seller && seller.emailNotifications) {
+             await notificationService.sendPayoutCompleted(
+               seller.email!,
+               seller.firstName!,
+               payout.amount,
+               "Item" // We'd need to fetch transaction to get item name. Payout has id.
+             );
+          }
+
 
           console.log('Transfer successful for payout:', payout.id);
         }

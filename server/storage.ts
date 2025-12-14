@@ -57,9 +57,9 @@ export interface IStorage {
   // Notification methods
   createNotification(notification: InsertNotification): Promise<Notification>;
   getNotificationsByUser(userId: string): Promise<Notification[]>;
-  markNotificationAsRead(notificationId: string): Promise<Notification | undefined>;
   markAllAsRead(userId: string): Promise<boolean>;
   getUnreadNotificationsCount(userId: string): Promise<number>;
+  updateUserConsent(userId: string, hasConsent: boolean): Promise<User | undefined>;
 }
 
 class FirebaseStorage implements IStorage {
@@ -142,6 +142,7 @@ class FirebaseStorage implements IStorage {
           firstName: user.firstName || user.email!.split('@')[0],
           lastName: user.lastName || '',
           country: 'Nigeria', // Default country
+          emailNotifications: user.emailNotifications ?? false,
         };
         return this.createUser(userData);
       }
@@ -697,6 +698,19 @@ class FirebaseStorage implements IStorage {
       return true;
     } catch (error) {
       console.error("Error marking all notifications as read:", error);
+      throw error;
+    }
+  }
+  async updateUserConsent(userId: string, hasConsent: boolean): Promise<User | undefined> {
+    try {
+      const docRef = db.collection("users").doc(userId);
+      await docRef.update({ 
+        emailNotifications: hasConsent,
+        updatedAt: new Date()
+      });
+      return this.getUser(userId);
+    } catch (error) {
+      console.error("Error updating user consent:", error);
       throw error;
     }
   }

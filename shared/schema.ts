@@ -1,5 +1,5 @@
 import { sql } from "drizzle-orm";
-import { pgTable, text, varchar, timestamp, decimal, integer, jsonb, index } from "drizzle-orm/pg-core";
+import { pgTable, text, varchar, timestamp, decimal, integer, jsonb, index, boolean } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -29,6 +29,7 @@ export const users = pgTable("users", {
   recipientCode: text("recipient_code"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  emailNotifications: boolean("email_notifications"),
 });
 
 export const transactionStatuses = ["pending", "active", "paid", "asset_transferred", "completed", "cancelled"] as const;
@@ -75,6 +76,7 @@ export const insertUserSchema = z.object({
   lastName: z.string().min(1),
   country: z.string().min(1),
   referralCode: z.string().optional(),
+  emailNotifications: z.boolean().optional(),
 });
 
 export const upsertUserSchema = z.object({
@@ -83,6 +85,7 @@ export const upsertUserSchema = z.object({
   firstName: z.string().optional().nullable(),
   lastName: z.string().optional().nullable(),
   profileImageUrl: z.string().optional().nullable(),
+  emailNotifications: z.boolean().optional(),
 });
 
 export const insertTransactionSchema = z.object({

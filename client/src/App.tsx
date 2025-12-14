@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
 import { DashboardLayout } from "@/components/DashboardLayout";
+import { EmailConsent } from "@/components/EmailConsent";
 
 import { CreateAccount } from "@/pages/CreateAccount";
 import { Login } from "@/pages/Login";
@@ -97,6 +98,7 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
+        <EmailConsent />
         <Router />
       </TooltipProvider>
     </QueryClientProvider>
