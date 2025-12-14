@@ -1,0 +1,9 @@
+
+@echo off
+set GIT_EDITOR=type
+echo Adding resolved files...
+git add .
+echo Continuing rebase...
+git rebase --continue
+echo Checking status...
+git status
