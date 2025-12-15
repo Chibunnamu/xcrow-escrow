@@ -674,6 +674,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { transactionId } = req.body;
       console.log('Received transactionId:', transactionId);
 
+      // Input validation
       if (!transactionId) {
         console.log('No transactionId provided');
         return res.status(400).json({ message: "Transaction ID is required" });
@@ -706,51 +707,68 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(403).json({ message: "You are not authorized to pay for this transaction" });
       }
 
-      const reference = `TXN-${transaction.id}-${Date.now()}`;
+      // Validate baseAmount
       const baseAmount = parseFloat(transaction.price) + parseFloat(transaction.commission);
-      const chargeBreakdown = calculatePaystackCharge(baseAmount);
-      const totalAmount = chargeBreakdown.totalChargeAmount;
-      const finalAmountInKobo = Math.round(totalAmount * 100);
-
-      // Guards
-      if (totalAmount < baseAmount) {
-        throw new Error("Invalid payment amount: final amount cannot be less than base amount");
-      }
-      if (finalAmountInKobo > 50000000 && baseAmount < 100000) {
-        throw new Error("Invalid payment amount: exceeds limit for small payments");
-      }
-      if (totalAmount <= 0) {
-        throw new Error("Invalid payment amount");
+      if (!baseAmount || isNaN(baseAmount) || baseAmount <= 0) {
+        console.log('Invalid baseAmount:', baseAmount);
+        return res.status(400).json({ message: "Invalid transaction amount" });
       }
 
-      console.log('Calculated total amount with Paystack charge:', totalAmount, 'for price:', transaction.price, 'commission:', transaction.commission);
+      // Validate email
+      if (!transaction.buyerEmail || typeof transaction.buyerEmail !== 'string') {
+        console.log('Invalid email:', transaction.buyerEmail);
+        return res.status(400).json({ message: "Invalid buyer email" });
+      }
 
-      console.log('Calling initializePayment with params:', {
-        email: transaction.buyerEmail,
-        amount: totalAmount,
-        reference,
-        metadata: {
-          transactionId: transaction.id,
-          itemName: transaction.itemName,
-        },
+      // Calculate fees exactly once
+      const platformFee = baseAmount * 0.05;
+      const subtotal = baseAmount + platformFee;
+      const paystackFee = Math.min(subtotal * 0.015 + 100, 2000);
+      const totalAmount = subtotal + paystackFee;
+
+      // Convert final total to kobo exactly once
+      const amountInKobo = Math.round(totalAmount * 100);
+
+      // Log all calculated values before the API call for debugging
+      console.log('Payment calculation breakdown:', {
+        baseAmount,
+        platformFee,
+        subtotal,
+        paystackFee,
+        totalAmount,
+        amountInKobo,
+        email: transaction.buyerEmail
       });
 
-      const paymentData = await initializePayment({
-        email: transaction.buyerEmail,
-        amount: totalAmount,
-        reference,
-        metadata: {
-          transactionId: transaction.id,
-          itemName: transaction.itemName,
-        },
-      });
+      const reference = `TXN-${transaction.id}-${Date.now()}`;
 
-      console.log('Payment initialized successfully:', paymentData);
+      // Wrap Paystack API call in try/catch
+      try {
+        const paymentData = await initializePayment({
+          email: transaction.buyerEmail,
+          amount: totalAmount, // Pass amount in naira
+          reference,
+          metadata: {
+            transactionId: transaction.id,
+            itemName: transaction.itemName,
+          },
+        });
 
-      res.json({
-        authorization_url: paymentData.data.authorization_url,
-        reference: paymentData.data.reference,
-      });
+        console.log('Payment initialized successfully:', paymentData);
+
+        res.json({
+          authorization_url: paymentData.data.authorization_url,
+          reference: paymentData.data.reference,
+        });
+      } catch (paystackError: any) {
+        // On error, log the full error for debugging
+        console.error('Paystack API error:', paystackError.response?.data || paystackError.message);
+        // Return a 400 JSON response instead of letting the server crash
+        return res.status(400).json({
+          message: "Payment initialization failed",
+          error: paystackError.response?.data?.message || paystackError.message
+        });
+      }
     } catch (error: any) {
       console.error('Error initializing payment:', error);
       next(error);
