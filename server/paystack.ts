@@ -86,11 +86,12 @@ export async function initializePayment(
   params: InitializePaymentParams
 ): Promise<InitializePaymentResponse> {
   try {
+    // Amount should already be in kobo when passed to this function
     const response = await paystackClient.post<InitializePaymentResponse>(
       "/transaction/initialize",
       {
         email: params.email,
-        amount: params.amount * 100, // Convert to kobo
+        amount: params.amount, // Amount already in kobo
         reference: params.reference,
         metadata: params.metadata,
         callback_url: `${process.env.VITE_API_URL}/payment-callback`,

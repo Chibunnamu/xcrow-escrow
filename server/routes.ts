@@ -715,21 +715,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Validate email
-      if (!transaction.buyerEmail || typeof transaction.buyerEmail !== 'string') {
+      if (!transaction.buyerEmail || typeof transaction.buyerEmail !== 'string' || transaction.buyerEmail.trim() === '') {
         console.log('Invalid email:', transaction.buyerEmail);
         return res.status(400).json({ message: "Invalid buyer email" });
       }
 
-      // Calculate fees exactly once
+      // Calculate fees entirely in Naira
       const platformFee = baseAmount * 0.05;
       const subtotal = baseAmount + platformFee;
       const paystackFee = Math.min(subtotal * 0.015 + 100, 2000);
       const totalAmount = subtotal + paystackFee;
 
-      // Convert final total to kobo exactly once
+      // Convert final total to kobo exactly once, using Math.round to ensure integer
       const amountInKobo = Math.round(totalAmount * 100);
 
-      // Log all calculated values before the API call for debugging
+      // Add defensive check
+      if (amountInKobo <= 0 || !Number.isInteger(amountInKobo)) {
+        console.error('Invalid amountInKobo calculated:', amountInKobo);
+        return res.status(400).json({ message: "Invalid payment amount calculated" });
+      }
+
+      // Log all values before sending to Paystack
       console.log('Payment calculation breakdown:', {
         baseAmount,
         platformFee,
@@ -742,11 +748,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const reference = `TXN-${transaction.id}-${Date.now()}`;
 
-      // Wrap Paystack API call in try/catch
+      // Wrap the Paystack initialization API call in try/catch
       try {
         const paymentData = await initializePayment({
           email: transaction.buyerEmail,
-          amount: totalAmount, // Pass amount in naira
+          amount: amountInKobo, // Pass amount in kobo
           reference,
           metadata: {
             transactionId: transaction.id,
