@@ -709,11 +709,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const reference = `TXN-${transaction.id}-${Date.now()}`;
       const chargeBreakdown = calculatePaystackCharge(parseFloat(transaction.price) + parseFloat(transaction.commission));
       const totalAmount = chargeBreakdown.totalChargeAmount;
+      const sanitizedAmount = Math.round(totalAmount * 100);
+      if (sanitizedAmount <= 0) {
+        throw new Error("Invalid payment amount");
+      }
       console.log('Calculated total amount with Paystack charge:', totalAmount, 'for price:', transaction.price, 'commission:', transaction.commission);
 
       console.log('Calling initializePayment with params:', {
         email: transaction.buyerEmail,
-        amount: totalAmount,
+        amount: sanitizedAmount,
         reference,
         metadata: {
           transactionId: transaction.id,
@@ -723,7 +727,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const paymentData = await initializePayment({
         email: transaction.buyerEmail,
-        amount: totalAmount,
+        amount: sanitizedAmount,
         reference,
         metadata: {
           transactionId: transaction.id,
