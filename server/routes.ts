@@ -6,7 +6,7 @@ import { setupReplitAuth } from "./replitAuth";
 import passport from "passport";
 import { insertUserSchema, insertTransactionSchema, updateTransactionStatusSchema, insertDisputeSchema, updateDisputeStatusSchema, updateBankAccountSchema, insertNotificationSchema, type User } from "@shared/schema";
 import { randomBytes } from "crypto";
-import { initializePayment, verifyPayment, validatePaystackWebhook } from "./paystack";
+import { initializePayment, verifyPayment, validatePaystackWebhook, calculatePaystackCharge } from "./paystack";
 import { listBanks, verifyAccountNumber, createTransferRecipient, initiateTransfer } from "./transfer";
 import { notificationService } from "./email/email_service";
 
@@ -707,8 +707,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const reference = `TXN-${transaction.id}-${Date.now()}`;
-      const totalAmount = parseFloat(transaction.price) + parseFloat(transaction.commission);
-      console.log('Calculated total amount:', totalAmount, 'for price:', transaction.price, 'commission:', transaction.commission);
+      const chargeBreakdown = calculatePaystackCharge(parseFloat(transaction.price) + parseFloat(transaction.commission));
+      const totalAmount = chargeBreakdown.totalChargeAmount;
+      console.log('Calculated total amount with Paystack charge:', totalAmount, 'for price:', transaction.price, 'commission:', transaction.commission);
 
       console.log('Calling initializePayment with params:', {
         email: transaction.buyerEmail,

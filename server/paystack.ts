@@ -17,6 +17,33 @@ const paystackClient = axios.create({
   },
 });
 
+export interface PaystackChargeBreakdown {
+  baseAmount: number;
+  platformFee: number;
+  subtotal: number;
+  paystackFee: number;
+  totalChargeAmount: number;
+}
+
+export function calculatePaystackCharge(baseAmount: number): PaystackChargeBreakdown {
+  if (baseAmount <= 0) {
+    throw new Error("Invalid base amount: must be greater than 0");
+  }
+
+  const platformFee = baseAmount * 0.05; // 5% platform fee
+  const subtotal = baseAmount + platformFee;
+  const paystackFee = Math.min(subtotal * 0.015 + 100, 2000); // 1.5% + ₦100, capped at ₦2000
+  const totalChargeAmount = subtotal + paystackFee;
+
+  return {
+    baseAmount,
+    platformFee,
+    subtotal,
+    paystackFee,
+    totalChargeAmount,
+  };
+}
+
 export interface InitializePaymentParams {
   email: string;
   amount: number;
