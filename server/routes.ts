@@ -6,7 +6,7 @@ import { setupReplitAuth } from "./replitAuth";
 import passport from "passport";
 import { insertUserSchema, insertTransactionSchema, updateTransactionStatusSchema, insertDisputeSchema, updateDisputeStatusSchema, updateBankAccountSchema, insertNotificationSchema, type User } from "@shared/schema";
 import { randomBytes } from "crypto";
-import { initializePayment, verifyPayment, validatePaystackWebhook, calculatePaystackCharge } from "./paystack";
+import { initializePayment, verifyPayment, validatePaystackWebhook, calculatePaystackCharge, createSubaccount } from "./paystack";
 import { listBanks, verifyAccountNumber, createTransferRecipient, initiateTransfer } from "./transfer";
 import { notificationService } from "./email/email_service";
 
@@ -708,7 +708,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Validate baseAmount
-      const baseAmount = parseFloat(transaction.price) + parseFloat(transaction.commission);
+      const baseAmount = parseFloat(transaction.price);
       if (!baseAmount || isNaN(baseAmount) || baseAmount <= 0) {
         console.log('Invalid baseAmount:', baseAmount);
         return res.status(400).json({ message: "Invalid transaction amount" });
@@ -720,14 +720,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid buyer email" });
       }
 
-      // Calculate fees entirely in Naira
-      const platformFee = baseAmount * 0.05;
-      const subtotal = baseAmount + platformFee;
-      const paystackFee = Math.min(subtotal * 0.015 + 100, 2000);
-      const totalAmount = subtotal + paystackFee;
-
-      // Convert final total to kobo exactly once, using Math.round to ensure integer
-      const amountInKobo = Math.round(totalAmount * 100);
+      // Calculate Paystack charge using the utility function
+      const chargeBreakdown = calculatePaystackCharge(baseAmount);
+      const amountInKobo = Math.round(chargeBreakdown.totalChargeAmount * 100);
 
       // Add defensive check
       if (amountInKobo <= 0 || !Number.isInteger(amountInKobo)) {
@@ -738,10 +733,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log all values before sending to Paystack
       console.log('Payment calculation breakdown:', {
         baseAmount,
-        platformFee,
-        subtotal,
-        paystackFee,
-        totalAmount,
+        chargeBreakdown,
         amountInKobo,
         email: transaction.buyerEmail
       });
@@ -1301,7 +1293,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post("/api/bank-account", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = req.user as User;
-      
+
       const result = updateBankAccountSchema.safeParse(req.body);
       if (!result.success) {
         return res.status(400).json({ message: "Invalid input", errors: result.error.errors });
@@ -1310,19 +1302,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { bankCode, accountNumber, accountName } = result.data;
 
       const verificationData = await verifyAccountNumber(accountNumber, bankCode);
-      
+
       if (verificationData.data.account_name.toLowerCase() !== accountName.toLowerCase()) {
         return res.status(400).json({ message: "Account name does not match bank records" });
       }
 
-      const recipientData = await createTransferRecipient(accountName, accountNumber, bankCode);
+      // Create Paystack subaccount for split payments
+      // Seller gets 0% charge (receives base amount), platform gets the remainder after Paystack fees
+      const subaccountData = await createSubaccount({
+        business_name: `${user.firstName} ${user.lastName}`,
+        settlement_bank: bankCode,
+        account_number: accountNumber,
+        percentage_charge: 0, // Seller receives base amount, platform gets remainder
+        description: `Subaccount for ${user.email}`,
+      });
 
       const updatedUser = await storage.updateUserBankAccount(
         user.id,
         bankCode,
         accountNumber,
         accountName,
-        recipientData.data.recipient_code
+        subaccountData.data.subaccount_code
       );
 
       const { password, ...userWithoutPassword } = updatedUser!;

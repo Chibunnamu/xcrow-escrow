@@ -27,6 +27,8 @@ export const users = pgTable("users", {
   accountNumber: text("account_number"),
   accountName: text("account_name"),
   recipientCode: text("recipient_code"),
+  paystackSubaccountCode: text("paystack_subaccount_code"),
+  settlementType: text("settlement_type").default("subaccount"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   emailNotifications: boolean("email_notifications"),
