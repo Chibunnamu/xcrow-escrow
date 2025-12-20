@@ -202,29 +202,4 @@ export function validatePaystackWebhook(
   return hash === signature;
 }
 
-export interface PaystackChargeBreakdown {
-  baseAmount: number;
-  platformFee: number;
-  subtotal: number;
-  paystackFee: number;
-  totalChargeAmount: number;
-}
 
-export function calculatePaystackCharge(baseAmount: number): PaystackChargeBreakdown {
-  if (baseAmount <= 0 || isNaN(baseAmount)) {
-    throw new Error("Invalid baseAmount: must be a positive number");
-  }
-
-  const platformFee = baseAmount * 0.05;
-  const subtotal = baseAmount + platformFee;
-  const paystackFee = Math.min(subtotal * 0.015 + 100, 2000);
-  const totalChargeAmount = subtotal + paystackFee;
-
-  return {
-    baseAmount,
-    platformFee,
-    subtotal,
-    paystackFee,
-    totalChargeAmount,
-  };
-}
