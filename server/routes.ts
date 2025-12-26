@@ -7,7 +7,7 @@ import passport from "passport";
 import { insertUserSchema, insertTransactionSchema, updateTransactionStatusSchema, insertDisputeSchema, updateDisputeStatusSchema, updateBankAccountSchema, insertNotificationSchema, type User } from "@shared/schema";
 import { randomBytes } from "crypto";
 import { initializePayment, verifyPayment, validatePaystackWebhook, calculatePaystackCharge, createSubaccount } from "./paystack";
-import { listBanks, verifyAccountNumber, createTransferRecipient, initiateTransfer } from "./transfer";
+import { listBanks, verifyAccountNumber, createTransferRecipient, initiateTransfer } from "./transfer_new";
 import { notificationService } from "./email/email_service";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -368,8 +368,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             } else if (!seller.recipientCode) {
               console.log("Seller has no bank account configured, payout skipped for transaction:", req.params.id);
             } else {
-              const payoutAmount = (parseFloat(existingTransaction.price) - parseFloat(existingTransaction.commission)).toFixed(2);
-              
+              const payoutAmount = parseFloat(existingTransaction.price).toFixed(2);
+
               // Create or reuse existing payout record
               const payout = existingPayout || await storage.createPayout(
                 req.params.id,

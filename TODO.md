@@ -1,19 +1,33 @@
-# Paystack Payout System Update
+# Payout Logic Update Tasks
 
-## Backend Changes
-- [x] Update commission calculation in server/paystack.ts (10% total commission)
-- [x] Remove subaccount logic from server/paystack.ts
-- [x] Update bank account creation in server/routes.ts to use transfer recipients
-- [x] Update payout logic in server/routes.ts for direct transfers
-- [x] Update schema in shared/schema.ts (remove paystackSubaccountCode)
+## Current Issues
+- Seller payout is calculated as `price - commission` instead of exactly `baseAmount`
+- No validation for Paystack wallet balance before transfer
+- Missing logging of buyerPaid, sellerPayout, platformCommission, paystackTransactionFee, paystackTransferFee
 
-## UI Changes
-- [ ] Update Settings page to display/edit bank accounts
-- [ ] Add validation for required bank accounts
-- [ ] Update onboarding for company accounts
+## Required Changes
+
+### 1. Update Payout Calculation in routes.ts
+- Change payoutAmount from `(price - commission)` to exactly `baseAmount` (price)
+- Ensure transfer amount sent to Paystack is baseAmount
+
+### 2. Add Paystack Balance Validation
+- Check platform's Paystack wallet balance before initiating transfer
+- Ensure balance covers baseAmount + paystackTransferFee
+
+### 3. Update Logging and Return Values
+- Log and return: buyerPaid, sellerPayout, platformCommission, paystackTransactionFee, paystackTransferFee
+- Ensure seller payout record shows sellerPayout = baseAmount
+
+### 4. Verify Payment Calculation
+- Confirm calculatePaystackCharge function correctly calculates fees
+- Ensure buyer pays: baseAmount + commission + transactionFee + transferFee
+
+## Files to Modify
+- server/routes.ts (payout logic in transaction status update)
+- server/paystack.ts (add balance check function)
+- server/transfer.ts (potentially add balance check)
 
 ## Testing
-- [ ] Test payment initialization with new commission calculation
-- [ ] Test bank account setup and transfer initiation
-- [ ] Test payout flow end-to-end
-- [ ] Update database schema migration
+- Run test_payment_calculation.mjs to verify calculations
+- Test with sample transactions to ensure correct payouts
