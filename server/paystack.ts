@@ -19,9 +19,11 @@ const paystackClient = axios.create({
 
 export interface PaystackChargeBreakdown {
   baseAmount: number;
-  platformFee: number;
-  subtotal: number;
-  paystackFee: number;
+  commissionPool: number;
+  sellerPayout: number;
+  paystackTransactionFee: number;
+  paystackTransferFee: number;
+  companyCommission: number;
   totalChargeAmount: number;
 }
 
@@ -30,64 +32,46 @@ export function calculatePaystackCharge(baseAmount: number): PaystackChargeBreak
     throw new Error("Invalid base amount: must be greater than 0");
   }
 
-  const platformFee = baseAmount * 0.05; // 5% platform fee
-  const subtotal = baseAmount + platformFee;
-  const paystackFee = Math.min(subtotal * 0.015 + 100, 2000); // 1.5% + ₦100, capped at ₦2000
-  const totalChargeAmount = subtotal + paystackFee;
+  // Seller receives exactly the baseAmount with no deductions
+  const sellerPayout = baseAmount;
+
+  // Company commission is 10% of baseAmount
+  const companyCommission = baseAmount * 0.10;
+
+  // Paystack transaction fee on the full amount (base + commission)
+  const fullAmount = baseAmount + companyCommission;
+  const paystackTransactionFee = Math.min(fullAmount * 0.015 + 100, 2000); // 1.5% + ₦100, capped at ₦2000
+
+  // Paystack transfer fee on seller's payout amount
+  const paystackTransferFee = Math.min(sellerPayout * 0.015 + 10, 50); // 1.5% + ₦10, capped at ₦50
+
+  // Total amount buyer pays = baseAmount + company commission + all Paystack fees
+  const totalChargeAmount = baseAmount + companyCommission + paystackTransactionFee + paystackTransferFee;
 
   return {
     baseAmount,
-    platformFee,
-    subtotal,
-    paystackFee,
+    commissionPool: companyCommission, // Updated to match new commission calculation
+    sellerPayout,
+    paystackTransactionFee,
+    paystackTransferFee,
+    companyCommission,
     totalChargeAmount,
   };
 }
 
-export interface CreateSubaccountParams {
-  business_name: string;
-  settlement_bank: string;
-  account_number: string;
-  percentage_charge: number;
-  description?: string;
-}
 
-export interface CreateSubaccountResponse {
-  status: boolean;
-  message: string;
-  data: {
-    integration: number;
-    domain: string;
-    subaccount_code: string;
-    business_name: string;
-    description: string;
-    primary_contact_name: string | null;
-    primary_contact_email: string | null;
-    primary_contact_phone: string | null;
-    metadata: any;
-    percentage_charge: number;
-    is_verified: boolean;
-    settlement_bank: string;
-    account_number: string;
-    active: boolean;
-    migrate: boolean;
-    id: number;
-    createdAt: string;
-    updatedAt: string;
-  };
-}
 
 export interface InitializePaymentParams {
   email: string;
   amount: number;
   reference: string;
-  subaccount?: string;
-  transaction_charge?: number;
-  bearer?: string;
   metadata?: {
     transactionId: string;
     itemName: string;
   };
+  subaccount?: string;
+  transaction_charge?: number;
+  bearer?: string;
 }
 
 export interface InitializePaymentResponse {
@@ -155,22 +139,7 @@ export async function initializePayment(
   }
 }
 
-export async function createSubaccount(
-  params: CreateSubaccountParams
-): Promise<CreateSubaccountResponse> {
-  try {
-    const response = await paystackClient.post<CreateSubaccountResponse>(
-      "/subaccount",
-      params
-    );
-    return response.data;
-  } catch (error: any) {
-    console.error("Paystack create subaccount error:", error.response?.data || error.message);
-    throw new Error(
-      error.response?.data?.message || "Failed to create subaccount"
-    );
-  }
-}
+
 
 export async function verifyPayment(
   reference: string

@@ -45,7 +45,7 @@ export const CreateAccount = (): JSX.Element => {
     onSuccess: () => {
       toast({
         title: "Account created successfully",
-        description: "Welcome to Xcrow!",
+        description: "Welcome to Xcrow! Don't forget to set up your bank account in Settings to receive payouts.",
       });
       setLocation("/seller-dashboard");
     },

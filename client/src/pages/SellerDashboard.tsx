@@ -90,6 +90,9 @@ export const SellerDashboard = (): JSX.Element => {
 
   const userName = userData.user.name || userData.user.email.split('@')[0];
 
+  // Check if seller has bank account set up
+  const hasBankAccount = userData.user.bankCode && userData.user.accountNumber && userData.user.accountName;
+
   const getStatusBadge = (status: string) => {
     const statusConfig = {
       pending: { label: "Pending", className: "bg-yellow-100 text-yellow-800" },

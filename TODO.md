@@ -1,16 +1,19 @@
-# Paystack Integration Rewrite Plan
+# Paystack Payout System Update
 
-## Completed Tasks
-- [x] Set up Paystack test secret key in .env file
-- [x] Verified server starts successfully on localhost:5000
-- [x] Confirmed app is running and serving HTML
+## Backend Changes
+- [x] Update commission calculation in server/paystack.ts (10% total commission)
+- [x] Remove subaccount logic from server/paystack.ts
+- [x] Update bank account creation in server/routes.ts to use transfer recipients
+- [x] Update payout logic in server/routes.ts for direct transfers
+- [x] Update schema in shared/schema.ts (remove paystackSubaccountCode)
 
-## Next Steps
-- [ ] Update paystack.ts to remove mock logic and use real Paystack API calls
-- [ ] Ensure transfer.ts uses real Paystack transfer endpoints
-- [ ] Update routes.ts webhook handling to properly validate signatures
-- [ ] Test payment initialization with real API
-- [ ] Test payment verification
-- [ ] Test webhook processing
-- [ ] Test bank account verification and transfers
-- [ ] Verify automatic payouts work
+## UI Changes
+- [ ] Update Settings page to display/edit bank accounts
+- [ ] Add validation for required bank accounts
+- [ ] Update onboarding for company accounts
+
+## Testing
+- [ ] Test payment initialization with new commission calculation
+- [ ] Test bank account setup and transfer initiation
+- [ ] Test payout flow end-to-end
+- [ ] Update database schema migration

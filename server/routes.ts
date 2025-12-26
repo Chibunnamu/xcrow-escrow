@@ -1307,22 +1307,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Account name does not match bank records" });
       }
 
-      // Create Paystack subaccount for split payments
-      // Seller gets 0% charge (receives base amount), platform gets the remainder after Paystack fees
-      const subaccountData = await createSubaccount({
-        business_name: `${user.firstName} ${user.lastName}`,
-        settlement_bank: bankCode,
-        account_number: accountNumber,
-        percentage_charge: 0, // Seller receives base amount, platform gets remainder
-        description: `Subaccount for ${user.email}`,
-      });
+      // Create Paystack transfer recipient for payouts
+      const recipientData = await createTransferRecipient(accountName, accountNumber, bankCode);
 
       const updatedUser = await storage.updateUserBankAccount(
         user.id,
         bankCode,
         accountNumber,
         accountName,
-        subaccountData.data.subaccount_code
+        recipientData.data.recipient_code
       );
 
       const { password, ...userWithoutPassword } = updatedUser!;

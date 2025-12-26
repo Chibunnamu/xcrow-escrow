@@ -33,6 +33,9 @@ export const CreateTransaction = (): JSX.Element => {
     queryKey: ["/api/escrow-categories"],
   });
 
+  // Check if seller has bank account set up
+  const hasBankAccount = userData?.user?.bankCode && userData?.user?.accountNumber && userData?.user?.accountName;
+
   const form = useForm<TransactionForm>({
     resolver: zodResolver(transactionSchema),
     defaultValues: {
@@ -96,6 +99,29 @@ export const CreateTransaction = (): JSX.Element => {
             <h1 className="text-3xl font-bold text-[#041d0f] mb-2">Create Transaction</h1>
             <p className="text-gray-600">Set up a secure escrow transaction</p>
           </header>
+
+          {!hasBankAccount && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <div className="w-5 h-5 text-yellow-600 mt-0.5">⚠️</div>
+                <div className="flex-1">
+                  <p className="font-medium text-yellow-900">Bank Account Required</p>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    You need to set up your bank account in Settings to receive automatic payouts when transactions complete.
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setLocation("/settings")}
+                    className="mt-2 border-yellow-300 text-yellow-700 hover:bg-yellow-50"
+                  >
+                    Set Up Bank Account
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={onSubmit} className="space-y-6">
             <div className="space-y-2">
@@ -178,7 +204,7 @@ export const CreateTransaction = (): JSX.Element => {
 
             <div className="bg-gray-50 p-4 rounded-lg">
               <p className="text-sm text-gray-600">
-                Note: A 5% service commission will be added to the price
+                Note: A 10% service commission will be added to the price
               </p>
             </div>
 
