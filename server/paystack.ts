@@ -17,45 +17,56 @@ const paystackClient = axios.create({
   },
 });
 
-export interface PaystackChargeBreakdown {
-  baseAmount: number;
-  commissionPool: number;
-  sellerPayout: number;
-  paystackTransactionFee: number;
-  paystackTransferFee: number;
-  companyCommission: number;
-  totalChargeAmount: number;
+export const FEE_CONFIG = {
+  xcrowpayRate: 0.05, // 5% Xcrowpay service fee
+  paystackCollectionRate: 0.015, // 1.5% Paystack collection fee
+  paystackCollectionCap: 100000, // ₦1,000 cap in kobo
+  paystackPayoutThreshold: 5000000, // ₦50,000 threshold in kobo
+  paystackPayoutFeeLow: 2500, // ₦25 for payouts ≤ ₦50,000 in kobo
+  paystackPayoutFeeHigh: 5000, // ₦50 for payouts > ₦50,000 in kobo
+};
+
+export interface FeeBreakdown {
+  transactionAmount: number; // in kobo
+  paystackCollectionFee: number; // in kobo
+  xcrowpayFee: number; // in kobo
+  paystackPayoutFee: number; // in kobo
+  netAmountToBeneficiary: number; // in kobo
+  netRevenueToXcrowpay: number; // in kobo
 }
 
-export function calculatePaystackCharge(baseAmount: number): PaystackChargeBreakdown {
-  if (baseAmount <= 0) {
-    throw new Error("Invalid base amount: must be greater than 0");
+export function calculateFees(transactionAmount: number): FeeBreakdown {
+  if (transactionAmount <= 0) {
+    throw new Error("Invalid transaction amount: must be greater than 0");
   }
 
-  // Seller receives exactly the baseAmount with no deductions
-  const sellerPayout = baseAmount;
+  // Xcrowpay service fee: 5% of transaction amount
+  const xcrowpayFee = Math.round(transactionAmount * FEE_CONFIG.xcrowpayRate);
 
-  // Company commission is 10% of baseAmount
-  const companyCommission = baseAmount * 0.10;
+  // Paystack collection fee: 1.5% of transaction amount, capped at ₦1,000
+  const paystackCollectionFee = Math.min(
+    Math.round(transactionAmount * FEE_CONFIG.paystackCollectionRate),
+    FEE_CONFIG.paystackCollectionCap
+  );
 
-  // Paystack transaction fee on the full amount (base + commission)
-  const fullAmount = baseAmount + companyCommission;
-  const paystackTransactionFee = Math.min(fullAmount * 0.015 + 100, 2000); // 1.5% + ₦100, capped at ₦2000
+  // Paystack payout fee: ₦25 for ≤ ₦50,000, ₦50 for > ₦50,000
+  const paystackPayoutFee = transactionAmount <= FEE_CONFIG.paystackPayoutThreshold
+    ? FEE_CONFIG.paystackPayoutFeeLow
+    : FEE_CONFIG.paystackPayoutFeeHigh;
 
-  // Paystack transfer fee on seller's payout amount
-  const paystackTransferFee = Math.min(sellerPayout * 0.015 + 10, 50); // 1.5% + ₦10, capped at ₦50
+  // Net amount to beneficiary: full transaction amount
+  const netAmountToBeneficiary = transactionAmount;
 
-  // Total amount buyer pays = baseAmount + company commission + all Paystack fees
-  const totalChargeAmount = baseAmount + companyCommission + paystackTransactionFee + paystackTransferFee;
+  // Net revenue to Xcrowpay: Xcrowpay fee minus payout fee
+  const netRevenueToXcrowpay = xcrowpayFee - paystackPayoutFee;
 
   return {
-    baseAmount,
-    commissionPool: companyCommission, // Updated to match new commission calculation
-    sellerPayout,
-    paystackTransactionFee,
-    paystackTransferFee,
-    companyCommission,
-    totalChargeAmount,
+    transactionAmount,
+    paystackCollectionFee,
+    xcrowpayFee,
+    paystackPayoutFee,
+    netAmountToBeneficiary,
+    netRevenueToXcrowpay,
   };
 }
 

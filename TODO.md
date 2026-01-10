@@ -1,33 +1,35 @@
-# Payout Logic Update Tasks
+# Fee Handling Implementation Tasks
 
-## Current Issues
-- Seller payout is calculated as `price - commission` instead of exactly `baseAmount`
-- No validation for Paystack wallet balance before transfer
-- Missing logging of buyerPaid, sellerPayout, platformCommission, paystackTransactionFee, paystackTransferFee
+## Implemented Changes
+- Updated fee structure to Xcrowpay 5% service fee, Paystack 1.5% collection (capped at ₦1,000), payout fee deducted from Xcrowpay fee
+- Seller receives full transaction amount (principal)
+- Xcrowpay revenue = 5% - payout fee
+- All calculations in kobo, rounded to nearest kobo
+- Configurable rates in FEE_CONFIG
 
-## Required Changes
+## Remaining Tasks
 
 ### 1. Update Payout Calculation in routes.ts
-- Change payoutAmount from `(price - commission)` to exactly `baseAmount` (price)
-- Ensure transfer amount sent to Paystack is baseAmount
+- Ensure transfer amount sent to Paystack is transactionAmount
+- Use calculateFees for fee breakdown
 
 ### 2. Add Paystack Balance Validation
 - Check platform's Paystack wallet balance before initiating transfer
-- Ensure balance covers baseAmount + paystackTransferFee
+- Ensure balance covers transactionAmount + any additional fees if needed
 
 ### 3. Update Logging and Return Values
-- Log and return: buyerPaid, sellerPayout, platformCommission, paystackTransactionFee, paystackTransferFee
-- Ensure seller payout record shows sellerPayout = baseAmount
+- Log and return: transactionAmount, paystackCollectionFee, xcrowpayFee, paystackPayoutFee, netAmountToBeneficiary, netRevenueToXcrowpay
+- Ensure seller payout record shows netAmountToBeneficiary = transactionAmount
 
-### 4. Verify Payment Calculation
-- Confirm calculatePaystackCharge function correctly calculates fees
-- Ensure buyer pays: baseAmount + commission + transactionFee + transferFee
+### 4. Integrate Fee Calculation in Payment Flow
+- Use calculateFees in payment initialization and verification
+- Update routes to use new fee structure
 
 ## Files to Modify
-- server/routes.ts (payout logic in transaction status update)
-- server/paystack.ts (add balance check function)
-- server/transfer.ts (potentially add balance check)
+- server/routes.ts (integrate calculateFees in payment routes)
+- server/paystack.ts (add balance check function if needed)
+- server/transfer.ts (update transfer logic)
 
 ## Testing
 - Run test_payment_calculation.mjs to verify calculations
-- Test with sample transactions to ensure correct payouts
+- Test with sample transactions: ₦10,000, ₦50,000, ₦100,000

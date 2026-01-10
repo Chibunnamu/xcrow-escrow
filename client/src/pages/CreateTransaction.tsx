@@ -204,7 +204,7 @@ export const CreateTransaction = (): JSX.Element => {
 
             <div className="bg-gray-50 p-4 rounded-lg">
               <p className="text-sm text-gray-600">
-                Note: A 10% service commission will be added to the price
+                Note: A 5% service commission will be added to the price
               </p>
             </div>
 
