@@ -1,4 +1,4 @@
-import { calculateFees } from './server/paystack.ts';
+import { calculatePaystackCharge } from './server/paystack.ts';
 
 // Test the Xcrowpay fee calculation system
 console.log('Testing Xcrowpay Fee Calculation System\n');
@@ -9,7 +9,7 @@ const koboToNaira = (kobo) => (kobo / 100).toFixed(2);
 // Test with ₦10,000 (1,000,000 kobo)
 console.log('--- Example: ₦10,000 ---');
 const amount1 = 1000000; // ₦10,000 in kobo
-const fees1 = calculateFees(amount1);
+const fees1 = calculatePaystackCharge(amount1);
 console.log(`Transaction Amount: ₦${koboToNaira(fees1.transactionAmount)}`);
 console.log(`Paystack Collection Fee: ₦${koboToNaira(fees1.paystackCollectionFee)} (1.5% of transaction, capped at ₦1,000)`);
 console.log(`Xcrowpay Fee: ₦${koboToNaira(fees1.xcrowpayFee)} (5% of transaction)`);
@@ -20,7 +20,7 @@ console.log(`Total User Pays: ₦${koboToNaira(fees1.transactionAmount + fees1.p
 
 console.log('\n--- Example: ₦50,000 ---');
 const amount2 = 5000000; // ₦50,000 in kobo
-const fees2 = calculateFees(amount2);
+const fees2 = calculatePaystackCharge(amount2);
 console.log(`Transaction Amount: ₦${koboToNaira(fees2.transactionAmount)}`);
 console.log(`Paystack Collection Fee: ₦${koboToNaira(fees2.paystackCollectionFee)}`);
 console.log(`Xcrowpay Fee: ₦${koboToNaira(fees2.xcrowpayFee)}`);
@@ -31,7 +31,7 @@ console.log(`Total User Pays: ₦${koboToNaira(fees2.transactionAmount + fees2.p
 
 console.log('\n--- Example: ₦100,000 ---');
 const amount3 = 10000000; // ₦100,000 in kobo
-const fees3 = calculateFees(amount3);
+const fees3 = calculatePaystackCharge(amount3);
 console.log(`Transaction Amount: ₦${koboToNaira(fees3.transactionAmount)}`);
 console.log(`Paystack Collection Fee: ₦${koboToNaira(fees3.paystackCollectionFee)}`);
 console.log(`Xcrowpay Fee: ₦${koboToNaira(fees3.xcrowpayFee)}`);

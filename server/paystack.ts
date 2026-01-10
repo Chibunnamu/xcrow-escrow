@@ -33,9 +33,10 @@ export interface FeeBreakdown {
   paystackPayoutFee: number; // in kobo
   netAmountToBeneficiary: number; // in kobo
   netRevenueToXcrowpay: number; // in kobo
+  totalChargeAmount: number; // in kobo
 }
 
-export function calculateFees(transactionAmount: number): FeeBreakdown {
+export function calculatePaystackCharge(transactionAmount: number): FeeBreakdown {
   if (transactionAmount <= 0) {
     throw new Error("Invalid transaction amount: must be greater than 0");
   }
@@ -67,6 +68,7 @@ export function calculateFees(transactionAmount: number): FeeBreakdown {
     paystackPayoutFee,
     netAmountToBeneficiary,
     netRevenueToXcrowpay,
+    totalChargeAmount: transactionAmount + paystackCollectionFee,
   };
 }
 
