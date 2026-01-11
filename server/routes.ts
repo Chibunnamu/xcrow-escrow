@@ -720,9 +720,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid buyer email" });
       }
 
-      // Calculate Paystack charge using the utility function
+      // Calculate Paystack charge using the utility function (for logging)
       const chargeBreakdown = calculatePaystackCharge(baseAmount);
-      const amountInKobo = Math.round(chargeBreakdown.totalChargeAmount * 100);
+
+      // Calculate total amount including commission (Paystack will deduct its fees)
+      const totalAmount = baseAmount + parseFloat(transaction.commission);
+      const amountInKobo = Math.round(totalAmount * 100);
 
       // Add defensive check
       if (amountInKobo <= 0 || !Number.isInteger(amountInKobo)) {
