@@ -753,6 +753,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             transactionId: transaction.id,
             itemName: transaction.itemName,
           },
+          bearer: "account", // System bears the Paystack fees
         });
 
         console.log('Payment initialized successfully:', paymentData);
