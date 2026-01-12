@@ -1322,6 +1322,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         recipientData.data.recipient_code
       );
 
+      // Update the session user to reflect the changes
+      req.user = updatedUser;
+
       const { password, ...userWithoutPassword } = updatedUser!;
       res.json({ user: userWithoutPassword });
     } catch (error: any) {
