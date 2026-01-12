@@ -170,7 +170,7 @@ export const Settings = (): JSX.Element => {
                   <div>
                     <Label className="text-sm text-gray-500">Account Number</Label>
                     <p className="font-medium text-gray-900" data-testid="text-current-account">
-                      ****{user.accountNumber.slice(-4)}
+                      {user.accountNumber}
                     </p>
                   </div>
                   <div>
