@@ -11,9 +11,12 @@ declare global {
   namespace Express {
     interface User {
       id: string;
-      email: string;
-      firstName: string;
-      lastName: string;
+      email?: string | null;
+      firstName?: string | null;
+      lastName?: string | null;
+      bankCode?: string | null;
+      accountNumber?: string | null;
+      accountName?: string | null;
     }
   }
 }
@@ -52,7 +55,10 @@ export function setupAuth(app: any) {
         id: user.id,
         email: user.email!,
         firstName: user.firstName!,
-        lastName: user.lastName!
+        lastName: user.lastName!,
+        bankCode: user.bankCode,
+        accountNumber: user.accountNumber,
+        accountName: user.accountName
       });
     } catch (error) {
       return done(error);
@@ -89,7 +95,10 @@ export function setupAuth(app: any) {
           id: user.id,
           email: user.email!,
           firstName: user.firstName!,
-          lastName: user.lastName!
+          lastName: user.lastName!,
+          bankCode: user.bankCode,
+          accountNumber: user.accountNumber,
+          accountName: user.accountName
         });
       } catch (error) {
         return done(error);
@@ -128,7 +137,10 @@ export function setupAuth(app: any) {
           id: user.id,
           email: user.email!,
           firstName: user.firstName!,
-          lastName: user.lastName!
+          lastName: user.lastName!,
+          bankCode: user.bankCode,
+          accountNumber: user.accountNumber,
+          accountName: user.accountName
         });
       } catch (error) {
         return done(error);
@@ -152,7 +164,10 @@ export function setupAuth(app: any) {
         id: user.id,
         email: user.email!,
         firstName: user.firstName!,
-        lastName: user.lastName!
+        lastName: user.lastName!,
+        bankCode: user.bankCode,
+        accountNumber: user.accountNumber,
+        accountName: user.accountName
       });
     } catch (error) {
       done(error);

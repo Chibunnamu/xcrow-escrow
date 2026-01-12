@@ -175,8 +175,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Not authenticated" });
     }
 
-    // Both OAuth and local users now have a proper User object from deserialize
-    const { password, ...userWithoutPassword } = req.user as User;
+    // Fetch latest user data from Firestore to ensure bank details are included
+    const user = req.user as User;
+    const latestUser = await storage.getUser(user.id);
+    if (!latestUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const { password, ...userWithoutPassword } = latestUser;
     res.json({ user: userWithoutPassword });
   });
 
