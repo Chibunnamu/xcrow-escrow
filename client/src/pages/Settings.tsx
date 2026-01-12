@@ -305,16 +305,16 @@ export const Settings = (): JSX.Element => {
           </Card>
 
           {/* Current Bank Account Card */}
-          {hasBankAccount && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-[#493d9e]" />
-                  Current Bank Account
-                </CardTitle>
-                <CardDescription>Your registered bank account for receiving payouts</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-[#493d9e]" />
+                Current Bank Account
+              </CardTitle>
+              <CardDescription>Your registered bank account for receiving payouts</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {hasBankAccount ? (
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <Label className="text-sm text-gray-500">Bank Name</Label>
@@ -335,9 +335,11 @@ export const Settings = (): JSX.Element => {
                     </p>
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+              ) : (
+                <p className="text-gray-500">No bank account configured yet. Add your bank account details above to receive automatic payouts.</p>
+              )}
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
