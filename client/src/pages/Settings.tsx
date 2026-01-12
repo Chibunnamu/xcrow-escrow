@@ -149,41 +149,6 @@ export const Settings = (): JSX.Element => {
         </header>
 
         <div className="space-y-6">
-          {/* Current Bank Account Card */}
-          {hasBankAccount && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-[#493d9e]" />
-                  Current Bank Account
-                </CardTitle>
-                <CardDescription>Your registered bank account for receiving payouts</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <Label className="text-sm text-gray-500">Bank Name</Label>
-                    <p className="font-medium text-gray-900" data-testid="text-current-bank">
-                      {banksData?.banks.find(bank => bank.code === user.bankCode)?.name || user.bankCode}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-sm text-gray-500">Account Number</Label>
-                    <p className="font-medium text-gray-900" data-testid="text-current-account">
-                      {user.accountNumber}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-sm text-gray-500">Account Name</Label>
-                    <p className="font-medium text-gray-900" data-testid="text-current-name">
-                      {user.accountName}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
           {/* Bank Account Setup Card */}
           <Card>
             <CardHeader>
@@ -338,6 +303,41 @@ export const Settings = (): JSX.Element => {
               </div>
             </CardContent>
           </Card>
+
+          {/* Current Bank Account Card */}
+          {hasBankAccount && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="w-5 h-5 text-[#493d9e]" />
+                  Current Bank Account
+                </CardTitle>
+                <CardDescription>Your registered bank account for receiving payouts</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <Label className="text-sm text-gray-500">Bank Name</Label>
+                    <p className="font-medium text-gray-900" data-testid="text-current-bank">
+                      {banksData?.banks.find(bank => bank.code === user.bankCode)?.name || user.bankCode}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-500">Account Number</Label>
+                    <p className="font-medium text-gray-900" data-testid="text-current-account">
+                      {user.accountNumber}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-gray-500">Account Name</Label>
+                    <p className="font-medium text-gray-900" data-testid="text-current-name">
+                      {user.accountName}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </div>
       </div>
     </div>
