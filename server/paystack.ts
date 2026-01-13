@@ -26,50 +26,24 @@ export const FEE_CONFIG = {
   paystackPayoutFeeHigh: 5000, // ₦50 for payouts > ₦50,000 in kobo
 };
 
-export interface FeeBreakdown {
-  transactionAmount: number; // in kobo
-  paystackCollectionFee: number; // in kobo
-  xcrowpayFee: number; // in kobo
-  paystackPayoutFee: number; // in kobo
-  netAmountToBeneficiary: number; // in kobo
-  netRevenueToXcrowpay: number; // in kobo
-  totalChargeAmount: number; // in kobo
+export function calculateXcrowFee(baseAmount: number): number {
+  // Xcrow platform fee: 5% of base transaction amount
+  return Math.round(baseAmount * FEE_CONFIG.xcrowpayRate);
 }
 
-export function calculatePaystackCharge(transactionAmount: number): FeeBreakdown {
-  if (transactionAmount <= 0) {
-    throw new Error("Invalid transaction amount: must be greater than 0");
-  }
-
-  // Xcrowpay service fee: 5% of transaction amount
-  const xcrowpayFee = Math.round(transactionAmount * FEE_CONFIG.xcrowpayRate);
-
-  // Paystack collection fee: 1.5% of transaction amount, capped at ₦1,000
-  const paystackCollectionFee = Math.min(
-    Math.round(transactionAmount * FEE_CONFIG.paystackCollectionRate),
+export function calculatePaystackCollectionFee(baseAmount: number): number {
+  // Paystack collection fee: 1.5% of base amount, capped at ₦1,000
+  return Math.min(
+    Math.round(baseAmount * FEE_CONFIG.paystackCollectionRate),
     FEE_CONFIG.paystackCollectionCap
   );
+}
 
-  // Paystack payout fee: ₦25 for ≤ ₦50,000, ₦50 for > ₦50,000
-  const paystackPayoutFee = transactionAmount <= FEE_CONFIG.paystackPayoutThreshold
+export function calculateTransferFee(baseAmount: number): number {
+  // Paystack transfer (payout) fee: ₦25 for ≤ ₦50,000, ₦50 for > ₦50,000
+  return baseAmount <= FEE_CONFIG.paystackPayoutThreshold
     ? FEE_CONFIG.paystackPayoutFeeLow
     : FEE_CONFIG.paystackPayoutFeeHigh;
-
-  // Net amount to beneficiary: full transaction amount
-  const netAmountToBeneficiary = transactionAmount;
-
-  // Net revenue to Xcrowpay: Xcrowpay fee minus payout fee
-  const netRevenueToXcrowpay = xcrowpayFee - paystackPayoutFee;
-
-  return {
-    transactionAmount,
-    paystackCollectionFee,
-    xcrowpayFee,
-    paystackPayoutFee,
-    netAmountToBeneficiary,
-    netRevenueToXcrowpay,
-    totalChargeAmount: transactionAmount + paystackCollectionFee,
-  };
 }
 
 

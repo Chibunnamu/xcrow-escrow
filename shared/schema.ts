@@ -35,6 +35,15 @@ export const users = pgTable("users", {
 export const transactionStatuses = ["pending", "active", "paid", "asset_transferred", "completed", "cancelled"] as const;
 export type TransactionStatus = typeof transactionStatuses[number];
 
+export const paymentStatuses = ["pending", "success", "failed"] as const;
+export type PaymentStatus = typeof paymentStatuses[number];
+
+export const walletStatuses = ["pending_settlement", "available", "paid"] as const;
+export type WalletStatus = typeof walletStatuses[number];
+
+export const payoutStatuses = ["not_ready", "ready", "processing", "completed", "failed"] as const;
+export type PayoutStatus = typeof payoutStatuses[number];
+
 export const transactions = pgTable("transactions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   sellerId: varchar("seller_id").notNull().references(() => users.id),
@@ -45,6 +54,9 @@ export const transactions = pgTable("transactions", {
   price: decimal("price", { precision: 10, scale: 2 }).notNull(),
   commission: decimal("commission", { precision: 10, scale: 2 }).notNull(),
   status: text("status").notNull().default("pending").$type<TransactionStatus>(),
+  paymentStatus: text("payment_status").notNull().default("pending").$type<PaymentStatus>(),
+  walletStatus: text("wallet_status").notNull().default("pending_settlement").$type<WalletStatus>(),
+  payoutStatus: text("payout_status").notNull().default("not_ready").$type<PayoutStatus>(),
   paystackReference: text("paystack_reference"),
   uniqueLink: text("unique_link").notNull().unique(),
   escrowCategory: text("escrow_category"),
@@ -116,7 +128,7 @@ export const updateDisputeStatusSchema = z.object({
   status: z.enum(disputeStatuses),
 });
 
-export const payoutStatuses = ["pending", "processing", "success", "failed"] as const;
+export const payoutStatuses = ["not_ready", "ready", "processing", "completed", "failed"] as const;
 export type PayoutStatus = typeof payoutStatuses[number];
 
 export const payouts = pgTable("payouts", {
@@ -124,12 +136,28 @@ export const payouts = pgTable("payouts", {
   transactionId: varchar("transaction_id").notNull().unique().references(() => transactions.id),
   sellerId: varchar("seller_id").notNull().references(() => users.id),
   amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  status: text("status").notNull().default("pending").$type<PayoutStatus>(),
+  status: text("status").notNull().default("not_ready").$type<PayoutStatus>(),
   paystackTransferCode: text("paystack_transfer_code"),
   paystackReference: text("paystack_reference"),
   failureReason: text("failure_reason"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const sellerWallets = pgTable("seller_wallets", {
+  sellerId: varchar("seller_id").primaryKey().references(() => users.id),
+  availableBalance: decimal("available_balance", { precision: 10, scale: 2 }).notNull().default("0"),
+  pendingBalance: decimal("pending_balance", { precision: 10, scale: 2 }).notNull().default("0"),
+  lastSettlementCheck: timestamp("last_settlement_check"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export const platformFeeLedger = pgTable("platform_fee_ledger", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  transactionId: varchar("transaction_id").notNull().references(() => transactions.id),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const notificationTypes = [
@@ -202,6 +230,8 @@ export type Payout = typeof payouts.$inferSelect;
 export type UpdateBankAccount = z.infer<typeof updateBankAccountSchema>;
 export type Notification = typeof notifications.$inferSelect;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type SellerWallet = typeof sellerWallets.$inferSelect;
+export type PlatformFeeLedger = typeof platformFeeLedger.$inferSelect;
 
 export const insertNotificationSchema = z.object({
   userId: z.string(),

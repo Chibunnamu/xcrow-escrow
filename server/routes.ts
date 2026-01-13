@@ -6,7 +6,7 @@ import { setupReplitAuth } from "./replitAuth";
 import passport from "passport";
 import { insertUserSchema, insertTransactionSchema, updateTransactionStatusSchema, insertDisputeSchema, updateDisputeStatusSchema, updateBankAccountSchema, insertNotificationSchema, type User } from "@shared/schema";
 import { randomBytes } from "crypto";
-import { initializePayment, verifyPayment, validatePaystackWebhook, calculatePaystackCharge, createSubaccount } from "./paystack";
+import { initializePayment, verifyPayment, validatePaystackWebhook, calculateXcrowFee, calculatePaystackCollectionFee } from "./paystack";
 import { listBanks, verifyAccountNumber, createTransferRecipient, initiateTransfer } from "./transfer_new";
 import { notificationService } from "./email/email_service";
 
@@ -359,96 +359,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
         result.data.paystackReference
       );
 
-      // If transaction is completed, initiate payout to seller
+      // If transaction is completed, move funds from pending to available in wallet
       if (result.data.status === "completed" && transaction) {
         try {
-          // Check for existing payout to prevent duplicates (idempotency)
+          const baseAmount = parseFloat(existingTransaction.price);
+          const { moveToAvailable } = await import("./wallet");
+
+          // Move funds from pending to available balance
+          await moveToAvailable(existingTransaction.sellerId, baseAmount);
+
+          // Create payout record for tracking (but don't initiate transfer yet)
           const existingPayout = await storage.getPayoutByTransaction(req.params.id);
-          if (existingPayout && (existingPayout.status === "success" || existingPayout.status === "processing")) {
-            console.log("Payout already exists for transaction:", req.params.id, "with status:", existingPayout.status);
-          } else {
-            const seller = await storage.getUser(existingTransaction.sellerId);
-            
-            if (!seller) {
-              console.error("Seller not found for transaction:", req.params.id);
-            } else if (!seller.recipientCode) {
-              console.log("Seller has no bank account configured, payout skipped for transaction:", req.params.id);
-            } else {
-              const payoutAmount = parseFloat(existingTransaction.price).toFixed(2);
-
-              // Create or reuse existing payout record
-              const payout = existingPayout || await storage.createPayout(
-                req.params.id,
-                existingTransaction.sellerId,
-                payoutAmount
-              );
-              
-              try {
-                const transferReference = `PAYOUT-${payout.id}`;
-                const transferData = await initiateTransfer(
-                  seller.recipientCode,
-                  parseFloat(payoutAmount),
-                  transferReference,
-                  `Payout for transaction ${existingTransaction.itemName}`
-                );
-                
-                await storage.updatePayoutStatus(
-                  payout.id,
-                  "success",
-                  transferData.data.transfer_code,
-                  transferData.data.reference
-                );
-
-                // Create payout success audit trail notification
-                await storage.createNotification({
-                  userId: existingTransaction.sellerId,
-                  type: "payout_successful",
-                  title: "Payout Successful",
-                  message: `Payout of ₦${payoutAmount} processed for transaction "${existingTransaction.itemName}" (Transfer Code: ${transferData.data.transfer_code}).`,
-                  data: {
-                    action: "payout_success",
-                    payoutId: payout.id,
-                    transactionId: existingTransaction.id,
-                    sellerId: existingTransaction.sellerId,
-                    amount: payoutAmount,
-                    transferCode: transferData.data.transfer_code,
-                    paystackReference: transferData.data.reference,
-                    timestamp: new Date().toISOString(),
-                    paymentMethod: "paystack_transfer"
-                  },
-                });
-
-                if (seller && seller.emailNotifications) {
-                   await notificationService.sendPayoutCompleted(
-                     seller.email!,
-                     seller.firstName!,
-                     payoutAmount,
-                     existingTransaction.itemName
-                   );
-                }
-              } catch (transferError: any) {
-                console.error("Transfer initiation failed:", transferError);
-                await storage.updatePayoutStatus(
-                  payout.id,
-                  "failed",
-                  undefined,
-                  undefined,
-                  transferError.message || "Transfer initiation failed"
-                );
-
-                // Create payout failed notification
-                await storage.createNotification({
-                  userId: existingTransaction.sellerId,
-                  type: "payout_failed",
-                  title: "Payout Failed",
-                  message: `Your payout of ₦${payoutAmount} could not be processed. ${transferError.message || "Transfer initiation failed"}`,
-                  data: { payoutId: payout.id, amount: payoutAmount, failureReason: transferError.message },
-                });
-              }
-            }
+          if (!existingPayout) {
+            await storage.createPayout(
+              req.params.id,
+              existingTransaction.sellerId,
+              baseAmount.toFixed(2)
+            );
           }
-        } catch (payoutError: any) {
-          console.error("Payout processing error:", payoutError);
+
+          // Trigger payout processing (this will check balance and initiate if ready)
+          const { processPayoutQueue } = await import("./payout");
+          await processPayoutQueue(existingTransaction.sellerId);
+
+          console.log("Transaction completed, funds moved to available balance for seller:", existingTransaction.sellerId);
+        } catch (walletError: any) {
+          console.error("Wallet processing error:", walletError);
         }
       }
       
@@ -726,11 +662,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid buyer email" });
       }
 
-      // Calculate Paystack charge using the utility function (for logging)
-      const chargeBreakdown = calculatePaystackCharge(baseAmount);
+      // Calculate fees according to business rules
+      const xcrowFee = calculateXcrowFee(baseAmount);
+      const paystackCollectionFee = calculatePaystackCollectionFee(baseAmount);
 
-      // Calculate total amount including commission (Paystack will deduct its fees)
-      const totalAmount = baseAmount + parseFloat(transaction.commission);
+      // Total amount buyer pays: base + 5% platform fee + Paystack collection fee
+      const totalAmount = baseAmount + xcrowFee + paystackCollectionFee;
       const amountInKobo = Math.round(totalAmount * 100);
 
       // Add defensive check
@@ -742,7 +679,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Log all values before sending to Paystack
       console.log('Payment calculation breakdown:', {
         baseAmount,
-        chargeBreakdown,
+        xcrowFee,
+        paystackCollectionFee,
+        totalAmount,
         amountInKobo,
         email: transaction.buyerEmail
       });
@@ -839,12 +778,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const transaction = await storage.updateTransactionStatus(transactionId, "paid", reference);
 
           if (transaction) {
+            // Credit seller's pending balance with base amount
+            const baseAmount = parseFloat(transaction.price);
+            const { creditPendingBalance } = await import("./wallet");
+            await creditPendingBalance(transaction.sellerId, baseAmount);
+
+            // Credit platform fee ledger with 5% fee
+            const platformFee = baseAmount * 0.05;
+            await storage.createPlatformFeeEntry(transactionId, platformFee);
+
             // Create payment success audit trail notifications
             await storage.createNotification({
               userId: transaction.sellerId,
               type: "payment_successful",
               title: "Payment Received",
-              message: `Payment of ₦${transaction.price} received for transaction "${transaction.itemName}" (Ref: ${reference}).`,
+              message: `Payment of ₦${transaction.price} received for transaction "${transaction.itemName}" (Ref: ${reference}). Funds will be available for payout after settlement.`,
               data: {
                 action: "payment_success",
                 transactionId: transaction.id,
@@ -863,7 +811,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 await notificationService.sendPaymentMade(
                   sellerUser.email!,
                   sellerUser.firstName!,
-                  transaction.buyerEmail, // or buyer name if we had it
+                  transaction.buyerEmail,
                   transaction.price,
                   transaction.itemName
                 );
@@ -895,17 +843,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const payout = await storage.getPayoutByTransferCode(transferCode);
 
         if (payout) {
-          await storage.updatePayoutStatus(payout.id, "success", transferCode, event.data.reference);
+          await storage.updatePayoutStatus(payout.id, "completed", transferCode, event.data.reference);
+
+          // Deduct from seller's available balance
+          const { deductAvailableBalance } = await import("./wallet");
+          await deductAvailableBalance(payout.sellerId, parseFloat(payout.amount));
 
           // Create payout success notification via webhook
           await storage.createNotification({
             userId: payout.sellerId,
             type: "payout_successful",
             title: "Payout Successful",
-            message: "Payout processed via Webhook", 
+            message: "Payout processed via Webhook",
             data: { payoutId: payout.id }
           });
-          
+
           const seller = await storage.getUser(payout.sellerId);
           if (seller && seller.emailNotifications) {
              await notificationService.sendPayoutCompleted(
@@ -915,7 +867,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
                "Item" // We'd need to fetch transaction to get item name. Payout has id.
              );
           }
-
 
           console.log('Transfer successful for payout:', payout.id);
         }
@@ -931,6 +882,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
             event.data.reference,
             event.data.reason || "Transfer failed"
           );
+
+          // Return funds to seller's available balance
+          const { creditAvailableBalance } = await import("./wallet");
+          await creditAvailableBalance(payout.sellerId, parseFloat(payout.amount));
 
           // Create payout failed notification via webhook
           await storage.createNotification({

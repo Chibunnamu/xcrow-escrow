@@ -1,5 +1,5 @@
 import { db } from "./firebase.ts";
-import type { User, InsertUser, UpsertUser, Transaction, InsertTransaction, Dispute, InsertDispute, Payout, PayoutStatus, TransactionStatus, DisputeStatus, Notification, InsertNotification } from "@shared/schema";
+import type { User, InsertUser, UpsertUser, Transaction, InsertTransaction, Dispute, InsertDispute, Payout, PayoutStatus, TransactionStatus, DisputeStatus, Notification, InsertNotification, SellerWallet, PlatformFeeLedger } from "@shared/schema";
 import { randomBytes } from "crypto";
 
 export interface IStorage {
@@ -60,6 +60,14 @@ export interface IStorage {
   markAllAsRead(userId: string): Promise<boolean>;
   getUnreadNotificationsCount(userId: string): Promise<number>;
   updateUserConsent(userId: string, hasConsent: boolean): Promise<User | undefined>;
+
+  // Wallet methods
+  getSellerWallet(sellerId: string): Promise<SellerWallet | undefined>;
+  createSellerWallet(sellerId: string): Promise<SellerWallet>;
+  updateSellerWallet(sellerId: string, updates: Partial<SellerWallet>): Promise<SellerWallet>;
+
+  // Platform fee ledger methods
+  createPlatformFeeEntry(transactionId: string, amount: number): Promise<PlatformFeeLedger>;
 }
 
 class FirebaseStorage implements IStorage {
@@ -704,13 +712,84 @@ class FirebaseStorage implements IStorage {
   async updateUserConsent(userId: string, hasConsent: boolean): Promise<User | undefined> {
     try {
       const docRef = db.collection("users").doc(userId);
-      await docRef.update({ 
+      await docRef.update({
         emailNotifications: hasConsent,
         updatedAt: new Date()
       });
       return this.getUser(userId);
     } catch (error) {
       console.error("Error updating user consent:", error);
+      throw error;
+    }
+  }
+
+  // Wallet methods
+  async getSellerWallet(sellerId: string): Promise<SellerWallet | undefined> {
+    try {
+      const docRef = db.collection("seller_wallets").doc(sellerId);
+      const docSnap = await docRef.get();
+      if (docSnap.exists) {
+        return { sellerId, ...docSnap.data() } as SellerWallet;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error getting seller wallet:", error);
+      throw error;
+    }
+  }
+
+  async createSellerWallet(sellerId: string): Promise<SellerWallet> {
+    try {
+      const docRef = db.collection("seller_wallets").doc(sellerId);
+      const walletData = {
+        sellerId,
+        availableBalance: "0",
+        pendingBalance: "0",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      await docRef.set(walletData);
+      return walletData as SellerWallet;
+    } catch (error) {
+      console.error("Error creating seller wallet:", error);
+      throw error;
+    }
+  }
+
+  async updateSellerWallet(sellerId: string, updates: Partial<SellerWallet>): Promise<SellerWallet> {
+    try {
+      const wallet = await this.getSellerWallet(sellerId);
+      if (!wallet) {
+        throw new Error("Wallet not found");
+      }
+
+      const docRef = db.collection("seller_wallets").doc(sellerId);
+      const updateData = {
+        ...updates,
+        updatedAt: new Date(),
+      };
+      await docRef.update(updateData);
+      return { ...wallet, ...updateData };
+    } catch (error) {
+      console.error("Error updating seller wallet:", error);
+      throw error;
+    }
+  }
+
+  // Platform fee ledger methods
+  async createPlatformFeeEntry(transactionId: string, amount: number): Promise<PlatformFeeLedger> {
+    try {
+      const docRef = db.collection("platform_fee_ledger").doc();
+      const entryData = {
+        id: docRef.id,
+        transactionId,
+        amount: amount.toFixed(2),
+        createdAt: new Date(),
+      };
+      await docRef.set(entryData);
+      return entryData as PlatformFeeLedger;
+    } catch (error) {
+      console.error("Error creating platform fee entry:", error);
       throw error;
     }
   }
