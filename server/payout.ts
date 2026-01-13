@@ -104,18 +104,61 @@ export async function initiateSafePayout(transactionId: string, sellerId: string
   }
 }
 
-export async function processPayoutQueue(): Promise<void> {
+export async function processPayoutQueue(sellerId?: string): Promise<void> {
   try {
-    // Get all payouts that are not_ready or failed
-    // Note: This is a simplified implementation. In production, you'd query for pending payouts
-    // For now, we'll rely on individual payout requests
+    console.log("Processing payout queue for seller:", sellerId || "all sellers");
 
-    console.log("Processing payout queue - checking for ready payouts");
-
-    // This function would be called by a cron job to retry failed payouts
-    // Implementation depends on how you track payout queue
+    // If sellerId is provided, process payouts for that seller only
+    if (sellerId) {
+      await processPayoutsForSeller(sellerId);
+    } else {
+      // Process for all sellers (would be called by cron job)
+      // This is a placeholder for future implementation
+      console.log("Global payout queue processing not implemented yet");
+    }
 
   } catch (error) {
     console.error("Error processing payout queue:", error);
+  }
+}
+
+async function processPayoutsForSeller(sellerId: string): Promise<void> {
+  try {
+    // Get all payouts for this seller that are ready to be processed
+    const payouts = await storage.getPayoutsBySeller(sellerId);
+
+    // Filter for payouts that are not_ready (meaning they haven't been attempted yet)
+    const readyPayouts = payouts.filter(p => p.status === "not_ready");
+
+    console.log(`Found ${readyPayouts.length} ready payouts for seller ${sellerId}`);
+
+    for (const payout of readyPayouts) {
+      try {
+        console.log(`Processing payout ${payout.id} for amount ${payout.amount}`);
+
+        // Attempt to initiate the payout
+        const success = await initiateSafePayout(
+          payout.transactionId,
+          sellerId,
+          parseFloat(payout.amount)
+        );
+
+        if (success) {
+          console.log(`Payout ${payout.id} initiated successfully`);
+        } else {
+          console.log(`Payout ${payout.id} could not be initiated (insufficient balance or other issue)`);
+        }
+
+        // Add a small delay between payouts to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+      } catch (payoutError: any) {
+        console.error(`Error processing payout ${payout.id}:`, payoutError);
+        // Continue with other payouts even if one fails
+      }
+    }
+
+  } catch (error) {
+    console.error(`Error processing payouts for seller ${sellerId}:`, error);
   }
 }

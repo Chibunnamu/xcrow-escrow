@@ -753,20 +753,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post("/api/payments/webhook", async (req: Request, res: Response, next: NextFunction) => {
     try {
+      console.log('=== WEBHOOK RECEIVED ===');
+      console.log('Headers:', JSON.stringify(req.headers, null, 2));
+      console.log('Body:', req.body.toString());
+
       const signature = req.headers["x-paystack-signature"] as string;
 
       if (!signature) {
+        console.log('ERROR: No signature provided');
         return res.status(400).json({ message: "No signature provided" });
       }
 
       const isValid = validatePaystackWebhook(signature, req.body.toString());
 
       if (!isValid) {
+        console.log('ERROR: Invalid signature');
         return res.status(401).json({ message: "Invalid signature" });
       }
 
       const event = JSON.parse(req.body.toString());
       console.log('Processing Paystack webhook event:', event.event);
+      console.log('Event data:', JSON.stringify(event.data, null, 2));
 
       if (event.event === "charge.success") {
         const reference = event.data.reference;
