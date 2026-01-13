@@ -128,9 +128,6 @@ export const updateDisputeStatusSchema = z.object({
   status: z.enum(disputeStatuses),
 });
 
-export const payoutStatuses = ["not_ready", "ready", "processing", "completed", "failed"] as const;
-export type PayoutStatus = typeof payoutStatuses[number];
-
 export const payouts = pgTable("payouts", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   transactionId: varchar("transaction_id").notNull().unique().references(() => transactions.id),
