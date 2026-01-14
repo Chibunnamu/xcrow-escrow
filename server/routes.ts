@@ -782,14 +782,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.log('Payment successful for transaction:', transactionId, 'reference:', reference);
 
         if (transactionId) {
+          // First, get the transaction to check current status
+          const existingTransaction = await storage.getTransaction(transactionId);
+          if (!existingTransaction) {
+            console.error(`Transaction ${transactionId} not found for webhook processing`);
+            return res.status(400).json({ message: "Transaction not found" });
+          }
+
+          // Prevent duplicate processing
+          if (existingTransaction.status === "paid") {
+            console.log(`Transaction ${transactionId} already processed, skipping duplicate webhook`);
+            return res.status(200).json({ message: "Webhook already processed" });
+          }
+
+          // Credit seller's pending balance with base amount FIRST
+          const baseAmount = parseFloat(existingTransaction.price);
+          const { creditPendingBalance } = await import("./wallet");
+
+          try {
+            console.log(`[WEBHOOK] Crediting pending balance for seller ${existingTransaction.sellerId}, amount: ₦${baseAmount}`);
+            await creditPendingBalance(existingTransaction.sellerId, baseAmount);
+            console.log(`[WEBHOOK] Successfully credited pending balance for seller ${existingTransaction.sellerId}`);
+          } catch (walletError: any) {
+            console.error(`[WEBHOOK] Failed to credit pending balance for seller ${existingTransaction.sellerId}:`, walletError);
+            // Do NOT mark transaction as paid if wallet credit fails
+            return res.status(500).json({ message: "Failed to process payment - wallet credit failed" });
+          }
+
+          // Only update transaction status after wallet credit succeeds
           const transaction = await storage.updateTransactionStatus(transactionId, "paid", reference);
+          console.log(`[WEBHOOK] Transaction ${transactionId} status updated to paid`);
 
           if (transaction) {
-            // Credit seller's pending balance with base amount
-            const baseAmount = parseFloat(transaction.price);
-            const { creditPendingBalance } = await import("./wallet");
-            await creditPendingBalance(transaction.sellerId, baseAmount);
-
             // Credit platform fee ledger with 5% fee
             const platformFee = baseAmount * 0.05;
             await storage.createPlatformFeeEntry(transactionId, platformFee);
