@@ -41,7 +41,7 @@ export type PaymentStatus = typeof paymentStatuses[number];
 export const walletStatuses = ["pending_settlement", "available", "paid"] as const;
 export type WalletStatus = typeof walletStatuses[number];
 
-export const payoutStatuses = ["not_ready", "ready", "processing", "completed", "failed"] as const;
+export const payoutStatuses = ["not_ready", "pending_settlement", "ready", "processing", "completed", "failed"] as const;
 export type PayoutStatus = typeof payoutStatuses[number];
 
 export const transactions = pgTable("transactions", {
@@ -137,6 +137,9 @@ export const payouts = pgTable("payouts", {
   paystackTransferCode: text("paystack_transfer_code"),
   paystackReference: text("paystack_reference"),
   failureReason: text("failure_reason"),
+  retryCount: integer("retry_count").notNull().default(0),
+  nextRetryAt: timestamp("next_retry_at"),
+  lastRetryAt: timestamp("last_retry_at"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

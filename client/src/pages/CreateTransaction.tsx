@@ -25,7 +25,7 @@ export const CreateTransaction = (): JSX.Element => {
   const [, setLocation] = useLocation();
   const { toast } = useToast();
 
-  const { data: userData } = useQuery({
+  const { data: userData } = useQuery<any>({
     queryKey: ["/api/user"],
   });
 
@@ -34,7 +34,7 @@ export const CreateTransaction = (): JSX.Element => {
   });
 
   // Check if seller has bank account set up
-  const hasBankAccount = userData?.user?.bankCode && userData?.user?.accountNumber && userData?.user?.accountName;
+  const hasBankAccount = userData?.bankCode && userData?.accountNumber && userData?.accountName;
 
   const form = useForm<TransactionForm>({
     resolver: zodResolver(transactionSchema),

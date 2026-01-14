@@ -21,31 +21,39 @@ export default function AdminDashboard() {
   // Fetch admin data
   const { data: transactions, refetch: refetchTransactions } = useQuery({
     queryKey: ["admin-transactions"],
-    queryFn: () => apiRequest("/api/admin/transactions"),
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/admin/transactions");
+      return res.json();
+    },
   });
 
   const { data: users, refetch: refetchUsers } = useQuery({
     queryKey: ["admin-users"],
-    queryFn: () => apiRequest("/api/admin/users"),
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/admin/users");
+      return res.json();
+    },
   });
 
   const { data: disputes, refetch: refetchDisputes } = useQuery({
     queryKey: ["admin-disputes"],
-    queryFn: () => apiRequest("/api/admin/disputes"),
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/admin/disputes");
+      return res.json();
+    },
   });
 
   const { data: logs } = useQuery({
     queryKey: ["admin-logs"],
-    queryFn: () => apiRequest("/api/admin/logs"),
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/admin/logs");
+      return res.json();
+    },
   });
 
   const updateTransactionStatus = async (transactionId: string, status: string) => {
     try {
-      await apiRequest(`/api/admin/transactions/${transactionId}/status`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status, adminNotes }),
-      });
+      await apiRequest("POST", `/api/admin/transactions/${transactionId}/status`, { status, adminNotes });
       toast({ title: "Success", description: "Transaction status updated" });
       refetchTransactions();
       setSelectedTransaction(null);
@@ -57,11 +65,7 @@ export default function AdminDashboard() {
 
   const addAdminNotes = async (transactionId: string) => {
     try {
-      await apiRequest(`/api/admin/transactions/${transactionId}/notes`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ notes: adminNotes }),
-      });
+      await apiRequest("POST", `/api/admin/transactions/${transactionId}/notes`, { notes: adminNotes });
       toast({ title: "Success", description: "Notes added successfully" });
       refetchTransactions();
       setSelectedTransaction(null);
@@ -73,11 +77,7 @@ export default function AdminDashboard() {
 
   const changeUserRole = async (userId: string, role: string) => {
     try {
-      await apiRequest(`/api/admin/users/${userId}/role`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ role }),
-      });
+      await apiRequest("POST", `/api/admin/users/${userId}/role`, { role });
       toast({ title: "Success", description: "User role updated" });
       refetchUsers();
     } catch (error) {
@@ -87,11 +87,7 @@ export default function AdminDashboard() {
 
   const changeUserStatus = async (userId: string, status: string) => {
     try {
-      await apiRequest(`/api/admin/users/${userId}/status`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
+      await apiRequest("POST", `/api/admin/users/${userId}/status`, { status });
       toast({ title: "Success", description: "User status updated" });
       refetchUsers();
     } catch (error) {

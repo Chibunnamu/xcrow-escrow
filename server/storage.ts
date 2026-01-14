@@ -50,9 +50,11 @@ export interface IStorage {
   // Payout methods
   createPayout(transactionId: string, sellerId: string, amount: string): Promise<Payout>;
   updatePayoutStatus(payoutId: string, status: PayoutStatus, transferCode?: string, paystackReference?: string, failureReason?: string): Promise<Payout | undefined>;
+  updatePayoutRetryInfo(payoutId: string, retryCount: number, nextRetryAt?: Date, lastRetryAt?: Date): Promise<Payout | undefined>;
   getPayoutsBySeller(sellerId: string): Promise<Array<Payout & { transaction: Transaction }>>;
   getPayoutByTransaction(transactionId: string): Promise<Payout | undefined>;
   getPayoutByTransferCode(transferCode: string): Promise<Payout | undefined>;
+  getPendingSettlementPayouts(): Promise<Payout[]>;
 
   // Notification methods
   createNotification(notification: InsertNotification): Promise<Notification>;
@@ -535,7 +537,7 @@ class FirebaseStorage implements IStorage {
         transactionId,
         sellerId,
         amount,
-        status: "pending" as PayoutStatus,
+        status: "not_ready" as PayoutStatus,
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -626,6 +628,52 @@ class FirebaseStorage implements IStorage {
     }
   }
 
+  async updatePayoutRetryInfo(payoutId: string, retryCount: number, nextRetryAt?: Date, lastRetryAt?: Date): Promise<Payout | undefined> {
+    try {
+      const docRef = db.collection("payouts").doc(payoutId);
+      const updateData: any = {
+        retryCount,
+        updatedAt: new Date(),
+      };
+      if (nextRetryAt) {
+        updateData.nextRetryAt = nextRetryAt;
+      }
+      if (lastRetryAt) {
+        updateData.lastRetryAt = lastRetryAt;
+      }
+      await docRef.update(updateData);
+
+      const docSnap = await docRef.get();
+      if (docSnap.exists) {
+        return { id: docSnap.id, ...docSnap.data() } as Payout;
+      }
+      return undefined;
+    } catch (error) {
+      console.error("Error updating payout retry info:", error);
+      throw error;
+    }
+  }
+
+  async getPendingSettlementPayouts(): Promise<Payout[]> {
+    try {
+      const querySnapshot = await db.collection("payouts")
+        .where("status", "==", "pending_settlement")
+        .get();
+      // Sort in memory instead of using orderBy (avoids composite index requirement)
+      return querySnapshot.docs
+        .map(doc => ({ id: doc.id, ...doc.data() } as Payout))
+        .sort((a, b) => {
+          // Sort by nextRetryAt, then by createdAt
+          const aTime = a.nextRetryAt ? new Date(a.nextRetryAt).getTime() : new Date(a.createdAt).getTime();
+          const bTime = b.nextRetryAt ? new Date(b.nextRetryAt).getTime() : new Date(b.createdAt).getTime();
+          return aTime - bTime;
+        });
+    } catch (error) {
+      console.error("Error getting pending settlement payouts:", error);
+      throw error;
+    }
+  }
+
   // Notification methods
   async createNotification(notification: InsertNotification): Promise<Notification> {
     try {
@@ -709,6 +757,7 @@ class FirebaseStorage implements IStorage {
       throw error;
     }
   }
+
   async updateUserConsent(userId: string, hasConsent: boolean): Promise<User | undefined> {
     try {
       const docRef = db.collection("users").doc(userId);

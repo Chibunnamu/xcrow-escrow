@@ -25,13 +25,13 @@ export const Settings = (): JSX.Element => {
   const [verifiedAccountName, setVerifiedAccountName] = useState<string>("");
   const [isVerified, setIsVerified] = useState<boolean>(false);
 
-  const { data: userData, isLoading: userLoading } = useQuery<{ user: any } | null>({
+  const { data: userData, isLoading: userLoading } = useQuery<any>({
     queryKey: ["/api/user"],
   });
 
   const { data: banksData, isLoading: banksLoading } = useQuery<{ banks: Bank[] }>({
     queryKey: ["/api/banks"],
-    enabled: !!userData?.user,
+    enabled: !!userData,
   });
 
   const verifyAccountMutation = useMutation({
@@ -123,7 +123,7 @@ export const Settings = (): JSX.Element => {
   };
 
   useEffect(() => {
-    if (!userLoading && !userData?.user) {
+    if (!userLoading && !userData) {
       setLocation("/login");
     }
   }, [userData, userLoading, setLocation]);
@@ -136,7 +136,7 @@ export const Settings = (): JSX.Element => {
     );
   }
 
-  const user = userData.user;
+  const user = userData;
   const hasBankAccount = user.bankCode && user.accountNumber && user.accountName;
   const selectedBank = banksData?.banks.find(bank => bank.code === selectedBankCode);
 

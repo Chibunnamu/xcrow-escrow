@@ -7,7 +7,7 @@ import { deductAvailableBalance } from "./wallet";
  * Payout service for safe transfer initiation with balance checks and settlement logic
  */
 
-export async function checkBalanceAndSettle(sellerId: string, payoutAmount: number): Promise<boolean> {
+export async function checkBalanceAndSettle(sellerId: string, payoutAmount: number): Promise<{ hasBalance: boolean; availableBalance: number; requiredBalance: number }> {
   try {
     // Get current Paystack balance
     const balanceResponse = await getBalance();
@@ -20,15 +20,16 @@ export async function checkBalanceAndSettle(sellerId: string, payoutAmount: numb
     // Check if balance is sufficient (payout + transfer fee)
     const requiredBalance = payoutAmountKobo + transferFeeKobo;
 
-    if (availableBalance < requiredBalance) {
+    const hasBalance = availableBalance >= requiredBalance;
+
+    if (!hasBalance) {
       console.log(`Insufficient Paystack balance for payout. Required: ${requiredBalance}, Available: ${availableBalance}`);
-      return false;
     }
 
-    return true;
+    return { hasBalance, availableBalance, requiredBalance };
   } catch (error) {
     console.error("Error checking balance for settlement:", error);
-    return false;
+    return { hasBalance: false, availableBalance: 0, requiredBalance: 0 };
   }
 }
 
@@ -42,11 +43,30 @@ export async function initiateSafePayout(transactionId: string, sellerId: string
     }
 
     // Check Paystack balance
-    const hasBalance = await checkBalanceAndSettle(sellerId, payoutAmount);
-    if (!hasBalance) {
-      // Mark payout as not ready if it exists
+    const balanceCheck = await checkBalanceAndSettle(sellerId, payoutAmount);
+    if (!balanceCheck.hasBalance) {
+      // Mark payout as pending_settlement if it exists
       if (existingPayout) {
-        await storage.updatePayoutStatus(existingPayout.id, "not_ready");
+        // Calculate next retry time (exponential backoff: 1h, 2h, 4h, 8h, 24h max)
+        const retryCount = existingPayout.retryCount || 0;
+        const nextRetryHours = Math.min(Math.pow(2, retryCount), 24); // Max 24 hours
+        const nextRetryAt = new Date(Date.now() + nextRetryHours * 60 * 60 * 1000);
+
+        await storage.updatePayoutRetryInfo(
+          existingPayout.id,
+          retryCount + 1,
+          nextRetryAt,
+          new Date()
+        );
+
+        // Update status to pending_settlement
+        await storage.updatePayoutStatus(
+          existingPayout.id,
+          "pending_settlement",
+          undefined,
+          undefined,
+          `Insufficient balance. Required: ₦${(balanceCheck.requiredBalance / 100).toFixed(2)}, Available: ₦${(balanceCheck.availableBalance / 100).toFixed(2)}. Next retry: ${nextRetryAt.toISOString()}`
+        );
       }
       return false;
     }
@@ -85,6 +105,9 @@ export async function initiateSafePayout(transactionId: string, sellerId: string
       transferData.data.reference
     );
 
+    // Reset retry count on success
+    await storage.updatePayoutRetryInfo(payout.id, 0);
+
     // Deduct from available balance (ledger update)
     await deductAvailableBalance(sellerId, payoutAmount);
 
@@ -112,13 +135,59 @@ export async function processPayoutQueue(sellerId?: string): Promise<void> {
     if (sellerId) {
       await processPayoutsForSeller(sellerId);
     } else {
-      // Process for all sellers (would be called by cron job)
-      // This is a placeholder for future implementation
-      console.log("Global payout queue processing not implemented yet");
+      // Process all pending settlement payouts globally
+      await processPendingSettlementPayouts();
     }
 
   } catch (error) {
     console.error("Error processing payout queue:", error);
+  }
+}
+
+export async function processPendingSettlementPayouts(): Promise<void> {
+  try {
+    console.log("Processing pending settlement payouts globally");
+
+    // Get all payouts that are pending settlement and ready for retry
+    const pendingPayouts = await storage.getPendingSettlementPayouts();
+    const now = new Date();
+
+    console.log(`Found ${pendingPayouts.length} pending settlement payouts`);
+
+    for (const payout of pendingPayouts) {
+      try {
+        // Check if it's time to retry this payout
+        if (payout.nextRetryAt && new Date(payout.nextRetryAt) > now) {
+          console.log(`Payout ${payout.id} not ready for retry yet. Next retry: ${payout.nextRetryAt}`);
+          continue;
+        }
+
+        console.log(`Retrying payout ${payout.id} for amount ${payout.amount}`);
+
+        // Attempt to initiate the payout
+        const success = await initiateSafePayout(
+          payout.transactionId,
+          payout.sellerId,
+          parseFloat(payout.amount)
+        );
+
+        if (success) {
+          console.log(`Payout ${payout.id} initiated successfully on retry`);
+        } else {
+          console.log(`Payout ${payout.id} still cannot be initiated (insufficient balance)`);
+        }
+
+        // Add a small delay between payouts to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+      } catch (payoutError: any) {
+        console.error(`Error retrying payout ${payout.id}:`, payoutError);
+        // Continue with other payouts even if one fails
+      }
+    }
+
+  } catch (error) {
+    console.error("Error processing pending settlement payouts:", error);
   }
 }
 

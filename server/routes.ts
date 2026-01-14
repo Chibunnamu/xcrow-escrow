@@ -1314,6 +1314,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Manual payout processing (for testing/admin use)
+  app.post("/api/payouts/process", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user as User;
+
+      // Only allow processing for the user's own payouts or admin users
+      const { sellerId } = req.body;
+      if (sellerId && sellerId !== user.id) {
+        // Check if user is admin (you might want to add proper admin role checking)
+        const userRole = (user as any).role;
+        if (!["admin", "support", "superAdmin"].includes(userRole)) {
+          return res.status(403).json({ message: "Forbidden: Can only process your own payouts" });
+        }
+      }
+
+      const { runPayoutScheduler } = await import("./payout_scheduler");
+      await runPayoutScheduler();
+
+      res.json({ message: "Payout processing completed" });
+    } catch (error) {
+      console.error('Payout processing error:', error);
+      next(error);
+    }
+  });
+
   // Notification routes
   app.get("/api/notifications", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
     try {

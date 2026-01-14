@@ -47,8 +47,8 @@ export const AppSidebar = ({ user }: AppSidebarProps): JSX.Element => {
     },
   });
 
-  // Check if user is admin
-  const isAdmin = user.role && ["admin", "support", "superAdmin"].includes(user.role);
+  // Admin check removed - role not available in user type
+  const isAdmin = false;
 
   const menuItems = [
     { icon: Home, label: "Dashboard", path: "/seller-dashboard", badge: null },

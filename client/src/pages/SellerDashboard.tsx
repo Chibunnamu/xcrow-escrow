@@ -110,12 +110,14 @@ export const SellerDashboard = (): JSX.Element => {
 
   const getPayoutStatusBadge = (status: string) => {
     const statusConfig = {
-      pending: { label: "Pending", className: "bg-yellow-100 text-yellow-800" },
+      not_ready: { label: "Not Ready", className: "bg-gray-100 text-gray-800" },
+      pending_settlement: { label: "Pending Settlement", className: "bg-orange-100 text-orange-800" },
+      ready: { label: "Ready", className: "bg-yellow-100 text-yellow-800" },
       processing: { label: "Processing", className: "bg-blue-100 text-blue-800" },
-      success: { label: "Success", className: "bg-green-100 text-green-800" },
+      completed: { label: "Completed", className: "bg-green-100 text-green-800" },
       failed: { label: "Failed", className: "bg-red-100 text-red-800" },
     };
-    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.pending;
+    const config = statusConfig[status as keyof typeof statusConfig] || statusConfig.not_ready;
     return (
       <Badge className={config.className} data-testid={`badge-payout-status-${status}`}>
         {config.label}
@@ -467,10 +469,12 @@ export const SellerDashboard = (): JSX.Element => {
                     </TooltipTrigger>
                     <TooltipContent className="max-w-xs">
                       <div className="space-y-2 text-xs">
-                        <p><strong>Pending:</strong> Payout initiated, waiting for processing</p>
+                        <p><strong>Not Ready:</strong> Transaction not yet completed</p>
+                        <p><strong>Pending Settlement:</strong> Funds received, waiting for Paystack settlement (24h)</p>
+                        <p><strong>Ready:</strong> Funds settled, payout will be attempted</p>
                         <p><strong>Processing:</strong> Transfer in progress with Paystack</p>
-                        <p><strong>Success:</strong> Money successfully transferred to your bank</p>
-                        <p><strong>Failed:</strong> Transfer failed (check failure reason)</p>
+                        <p><strong>Completed:</strong> Money successfully transferred to your bank</p>
+                        <p><strong>Failed:</strong> Transfer failed (will retry automatically)</p>
                       </div>
                     </TooltipContent>
                   </UITooltip>

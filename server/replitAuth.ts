@@ -9,7 +9,7 @@ import { storage } from "./storage";
 
 if (!process.env.REPLIT_DOMAINS) {
   console.warn("REPLIT_DOMAINS not provided, Replit auth disabled");
-  return; // Early return to disable Replit auth
+  // Replit auth is disabled, module will still export functions but they won't work
 }
 
 const getOidcConfig = memoize(
@@ -76,7 +76,7 @@ export async function setupReplitAuth(app: Express) {
     tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
     verified: passport.AuthenticateCallback
   ) => {
-    const user = {};
+    const user: any = {};
     updateUserSession(user, tokens);
     await upsertUser(tokens.claims());
     verified(null, user);
