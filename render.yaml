@@ -23,3 +23,28 @@ services:
         sync: false
       - key: SESSION_SECRET
         sync: false
+  - type: cron
+    name: payout-scheduler
+    env: node
+    region: oregon
+    plan: starter
+    schedule: "*/30 * * * *"
+    buildCommand: npm run build
+    startCommand: npm run payout-scheduler
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: FIREBASE_PROJECT_ID
+        sync: false
+      - key: FIREBASE_PRIVATE_KEY
+        sync: false
+      - key: FIREBASE_CLIENT_EMAIL
+        sync: false
+      - key: PAYSTACK_SECRET_KEY
+        sync: false
+      - key: POSTMARK_SERVER_TOKEN
+        sync: false
+      - key: SESSION_SECRET
+        sync: false
