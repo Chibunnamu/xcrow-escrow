@@ -942,7 +942,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/banks", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
     try {
       const banksData = await listBanks();
-      res.json({ banks: banksData.data });
+      // Transform Korapay bank data to match frontend expectations
+      const banks = banksData.data.map((bank: any) => ({
+        id: bank.id,
+        code: bank.code,
+        name: bank.name
+      }));
+      res.json({ banks });
     } catch (error: any) {
       console.error('Banks API error:', error);
       next(error);
