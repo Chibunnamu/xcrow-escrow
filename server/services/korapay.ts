@@ -116,7 +116,7 @@ export interface VerifyPaymentResponse {
 export async function listBanks(countryCode = "NG"): Promise<BanksResponse> {
   try {
     const response = await korapayClient.get<BanksResponse>(
-      `/merchant/api/v1/misc/banks?countryCode=${countryCode}`
+      `/api/v1/misc/banks?countryCode=${countryCode}`
     );
     return response.data;
   } catch (error: any) {
@@ -136,7 +136,7 @@ export async function resolveAccount(
 ): Promise<ResolveAccountResponse> {
   try {
     const response = await korapayClient.post<ResolveAccountResponse>(
-      "/merchant/api/v1/misc/banks/resolve",
+      "/api/v1/misc/banks/resolve",
       {
         bank_code: bankCode,
         account_number: accountNumber,

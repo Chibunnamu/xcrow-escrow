@@ -152,4 +152,19 @@ export function registerPaymentRoutes(app: Express): void {
       next(error);
     }
   });
+
+  // Get list of banks
+  app.get("/api/banks", async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { listBanks } = await import("../services/korapay");
+      const banksData = await listBanks();
+      res.json(banksData);
+    } catch (error: any) {
+      console.error("Error fetching banks:", error);
+      res.status(500).json({
+        message: "Failed to fetch banks list",
+        error: error.message,
+      });
+    }
+  });
 }
