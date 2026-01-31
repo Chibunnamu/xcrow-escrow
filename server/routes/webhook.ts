@@ -67,7 +67,12 @@ export function registerWebhookRoutes(app: Express): void {
           const transaction = await storage.updateTransactionStatus(transactionId, "paid", reference);
           console.log(`[WEBHOOK] Transaction ${transactionId} status updated to paid`);
 
-          // Payout will be triggered when buyer confirms receipt (marks as completed)
+          // Immediately trigger payout to seller after payment confirmation
+          const payoutSuccess = await initiateImmediatePayout(transactionId, existingTransaction.sellerId, baseAmount);
+          if (!payoutSuccess) {
+            console.error(`[WEBHOOK] Failed to initiate immediate payout for transaction ${transactionId}`);
+            // Don't fail the webhook, but log the error
+          }
 
           if (transaction) {
             // Credit platform fee ledger with service fee (5% of base amount)
