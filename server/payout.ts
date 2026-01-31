@@ -1,6 +1,5 @@
 import { storage } from "./storage";
-import { getBalance, initiateTransfer } from "./transfer_new";
-import { calculateTransferFee } from "./paystack";
+import { transferToSeller } from "./services/korapay";
 import { deductAvailableBalance } from "./wallet";
 
 /**
@@ -8,29 +7,8 @@ import { deductAvailableBalance } from "./wallet";
  */
 
 export async function checkBalanceAndSettle(sellerId: string, payoutAmount: number): Promise<{ hasBalance: boolean; availableBalance: number; requiredBalance: number }> {
-  try {
-    // Get current Paystack balance
-    const balanceResponse = await getBalance();
-    const availableBalance = balanceResponse.data.find(b => b.currency === "NGN")?.balance || 0;
-
-    // Convert to kobo for comparison
-    const payoutAmountKobo = Math.round(payoutAmount * 100);
-    const transferFeeKobo = calculateTransferFee(payoutAmount);
-
-    // Check if balance is sufficient (payout + transfer fee)
-    const requiredBalance = payoutAmountKobo + transferFeeKobo;
-
-    const hasBalance = availableBalance >= requiredBalance;
-
-    if (!hasBalance) {
-      console.log(`Insufficient Paystack balance for payout. Required: ${requiredBalance}, Available: ${availableBalance}`);
-    }
-
-    return { hasBalance, availableBalance, requiredBalance };
-  } catch (error) {
-    console.error("Error checking balance for settlement:", error);
-    return { hasBalance: false, availableBalance: 0, requiredBalance: 0 };
-  }
+  // For Korapay, we assume balance is available for immediate payouts after payment confirmation
+  return { hasBalance: true, availableBalance: payoutAmount * 100, requiredBalance: payoutAmount * 100 };
 }
 
 export async function initiateSafePayout(transactionId: string, sellerId: string, payoutAmount: number): Promise<boolean> {
@@ -42,39 +20,10 @@ export async function initiateSafePayout(transactionId: string, sellerId: string
       return true;
     }
 
-    // Check Paystack balance
-    const balanceCheck = await checkBalanceAndSettle(sellerId, payoutAmount);
-    if (!balanceCheck.hasBalance) {
-      // Mark payout as pending_settlement if it exists
-      if (existingPayout) {
-        // Calculate next retry time (exponential backoff: 1h, 2h, 4h, 8h, 24h max)
-        const retryCount = existingPayout.retryCount || 0;
-        const nextRetryHours = Math.min(Math.pow(2, retryCount), 24); // Max 24 hours
-        const nextRetryAt = new Date(Date.now() + nextRetryHours * 60 * 60 * 1000);
-
-        await storage.updatePayoutRetryInfo(
-          existingPayout.id,
-          retryCount + 1,
-          nextRetryAt,
-          new Date()
-        );
-
-        // Update status to pending_settlement
-        await storage.updatePayoutStatus(
-          existingPayout.id,
-          "pending_settlement",
-          undefined,
-          undefined,
-          `Insufficient balance. Required: ₦${(balanceCheck.requiredBalance / 100).toFixed(2)}, Available: ₦${(balanceCheck.availableBalance / 100).toFixed(2)}. Next retry: ${nextRetryAt.toISOString()}`
-        );
-      }
-      return false;
-    }
-
     // Get seller bank details
     const seller = await storage.getUser(sellerId);
-    if (!seller || !seller.recipientCode) {
-      console.error(`Seller ${sellerId} has no bank account configured`);
+    if (!seller || !seller.bankCode || !seller.accountNumber) {
+      console.error(`Seller ${sellerId} has incomplete bank account details`);
       return false;
     }
 
@@ -88,20 +37,40 @@ export async function initiateSafePayout(transactionId: string, sellerId: string
     // Update payout status to processing
     await storage.updatePayoutStatus(payout.id, "processing");
 
-    // Initiate transfer
-    const transferReference = `PAYOUT-${payout.id}`;
-    const transferData = await initiateTransfer(
-      seller.recipientCode,
-      payoutAmount,
-      transferReference,
-      `Payout for transaction ${transactionId}`
-    );
+    // Get seller's full name for transfer
+    const sellerName = seller.firstName && seller.lastName
+      ? `${seller.firstName} ${seller.lastName}`
+      : seller.firstName || seller.email || "Seller";
+
+    // Initiate transfer using Korapay
+    const transferReference = `PAYOUT-${payout.id}-${Date.now()}`;
+    const transferData = await transferToSeller({
+      amount: payoutAmount,
+      currency: "NGN",
+      reference: transferReference,
+      destination: {
+        type: "bank_account",
+        amount: payoutAmount,
+        currency: "NGN",
+        bank_account: {
+          bank: seller.bankCode,
+          account: seller.accountNumber,
+        },
+        customer: {
+          email: seller.email!,
+          name: sellerName,
+        },
+      },
+      metadata: {
+        transactionId,
+      },
+    });
 
     // Update payout with transfer details
     await storage.updatePayoutStatus(
       payout.id,
       "completed",
-      transferData.data.transfer_code,
+      transferReference,
       transferData.data.reference
     );
 
@@ -111,7 +80,7 @@ export async function initiateSafePayout(transactionId: string, sellerId: string
     // Deduct from available balance (ledger update)
     await deductAvailableBalance(sellerId, payoutAmount);
 
-    console.log(`Payout initiated successfully for transaction ${transactionId}, transfer code: ${transferData.data.transfer_code}`);
+    console.log(`Payout initiated successfully for transaction ${transactionId}, transfer reference: ${transferReference}`);
     return true;
 
   } catch (error: any) {

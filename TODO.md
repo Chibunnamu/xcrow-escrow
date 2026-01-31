@@ -1,35 +1,80 @@
-# Fee Handling Implementation Tasks
+# Korapay Integration Implementation Plan
 
-## Implemented Changes
-- Updated fee structure to Xcrowpay 5% service fee, Paystack 1.5% collection (capped at ₦1,000), payout fee deducted from Xcrowpay fee
-- Seller receives full transaction amount (principal)
-- Xcrowpay revenue = 5% - payout fee
-- All calculations in kobo, rounded to nearest kobo
-- Configurable rates in FEE_CONFIG
+## Information Gathered
+- Current Paystack integration in `server/paystack.ts`, `server/routes.ts`, `server/payout.ts`, `server/transfer_new.ts`
+- Database schema in `shared/schema.ts` with transactions and payouts collections
+- Payment flow: buyer pays baseAmount + 5% service fee, seller gets baseAmount, platform keeps service fee minus gateway charges
+- Webhook handling for payment confirmation and transfer status updates
+- Admin dashboard exists but needs enhancement for Korapay stats and manual retry
 
-## Remaining Tasks
+## Plan
 
-### 1. Update Payout Calculation in routes.ts
-- Ensure transfer amount sent to Paystack is transactionAmount
-- Use calculateFees for fee breakdown
+### 1. Create Korapay Service (`server/services/korapay.ts`)
+- Implement `initializePayment()` using Korapay Collections API
+- Implement `verifyWebhook()` for webhook signature validation
+- Implement `transferToSeller()` using Korapay Transfers/Disbursement API
+- Handle idempotent payouts to prevent double transfers
+- Include retry logic for failed transfers
 
-### 2. Add Paystack Balance Validation
-- Check platform's Paystack wallet balance before initiating transfer
-- Ensure balance covers transactionAmount + any additional fees if needed
+### 2. Create Payment Routes (`server/routes/payments.ts`)
+- POST /api/payments/initialize: Calculate totalAmount, call Korapay charge API, save transaction with status="pending"
+- Replace existing Paystack payment initialization in `server/routes.ts`
 
-### 3. Update Logging and Return Values
-- Log and return: transactionAmount, paystackCollectionFee, xcrowpayFee, paystackPayoutFee, netAmountToBeneficiary, netRevenueToXcrowpay
-- Ensure seller payout record shows netAmountToBeneficiary = transactionAmount
+### 3. Create Webhook Routes (`server/routes/webhook.ts`)
+- POST /api/korapay/webhook: Verify signature, handle payment success, trigger immediate payout
+- Update transaction status to "paid" on successful payment
+- Call payout function immediately after payment confirmation
 
-### 4. Integrate Fee Calculation in Payment Flow
-- Use calculateFees in payment initialization and verification
-- Update routes to use new fee structure
+### 4. Create Admin Routes (`server/routes/admin.ts`)
+- GET /admin/login: Admin login page
+- GET /admin/dashboard: Dashboard with revenue stats, service fees, payouts, transaction table, payout logs
+- POST /admin/payouts/retry: Manual retry for failed payouts
 
-## Files to Modify
-- server/routes.ts (integrate calculateFees in payment routes)
-- server/paystack.ts (add balance check function if needed)
-- server/transfer.ts (update transfer logic)
+### 5. Update Main Routes (`server/routes.ts`)
+- Remove Paystack payment routes
+- Add Korapay routes
+- Update webhook endpoint to use Korapay
 
-## Testing
-- Run test_payment_calculation.mjs to verify calculations
-- Test with sample transactions: ₦10,000, ₦50,000, ₦100,000
+### 6. Update Payout Logic (`server/payout.ts`)
+- Modify to use Korapay transfer API instead of Paystack
+- Ensure only baseAmount is sent to seller
+- Update balance checking for Korapay fees
+
+### 7. Environment Variables
+- Add KORAPAY_PUBLIC_KEY, KORAPAY_SECRET_KEY, KORAPAY_WEBHOOK_SECRET
+- Remove Paystack keys (but keep for now if needed)
+
+### 8. Admin Dashboard Frontend
+- Create /admin/login page
+- Enhance /admin/dashboard with Korapay-specific stats
+- Add manual payout retry button
+
+### 9. Database Updates (if needed)
+- Reuse existing schema, map korapayReference to paystackReference field
+- Ensure payoutStatus tracks immediate payouts
+
+## Dependent Files to be edited
+- `server/paystack.ts` (remove or keep as backup)
+- `server/routes.ts` (update payment and webhook routes)
+- `server/payout.ts` (update transfer logic)
+- `server/transfer_new.ts` (replace with Korapay transfer logic)
+- `client/src/pages/AdminDashboard.tsx` (enhance with new stats)
+- `.env` or environment files (add Korapay keys)
+
+## Followup steps
+- Test payment initialization with Korapay sandbox
+- Test webhook handling
+- Test immediate payouts
+- Test admin dashboard functionality
+- Update documentation
+
+## Current Status
+- [ ] Create korapay service
+- [ ] Create payment routes
+- [ ] Create webhook routes
+- [ ] Create admin routes
+- [ ] Update main routes
+- [ ] Update payout logic
+- [ ] Update environment variables
+- [ ] Update admin dashboard frontend
+- [ ] Test integration

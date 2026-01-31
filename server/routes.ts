@@ -9,8 +9,16 @@ import { randomBytes } from "crypto";
 import { initializePayment, verifyPayment, validatePaystackWebhook, calculateXcrowFee, calculatePaystackCollectionFee } from "./paystack";
 import { listBanks, verifyAccountNumber, createTransferRecipient, initiateTransfer } from "./transfer_new";
 import { notificationService } from "./email/email_service";
+import { registerPaymentRoutes } from "./routes/payments";
+import { registerWebhookRoutes } from "./routes/webhook";
+import { registerAdminRoutes } from "./routes/admin";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Register route modules
+  registerPaymentRoutes(app);
+  registerWebhookRoutes(app);
+  registerAdminRoutes(app);
+
   // Removed Replit OAuth authentication
   // await setupReplitAuth(app);
 
