@@ -7,13 +7,10 @@ const KORAPAY_PUBLIC_KEY = process.env.KORAPAY_PUBLIC_KEY;
 const KORAPAY_SECRET_KEY = process.env.KORAPAY_SECRET_KEY;
 const KORAPAY_WEBHOOK_SECRET = process.env.KORAPAY_WEBHOOK_SECRET;
 
-if (!KORAPAY_SECRET_KEY) {
-  throw new Error("KORAPAY_SECRET_KEY environment variable is required");
-}
-
-if (!KORAPAY_WEBHOOK_SECRET) {
-  throw new Error("KORAPAY_WEBHOOK_SECRET environment variable is required");
-}
+// Check if Korapay is properly configured
+export const isKorapayConfigured = () => {
+  return !!(KORAPAY_SECRET_KEY && KORAPAY_WEBHOOK_SECRET);
+};
 
 const korapayClient = axios.create({
   baseURL: KORAPAY_BASE_URL,
@@ -272,6 +269,15 @@ export function calculateNetPayoutAmount(baseAmount: number): number {
  * Get list of supported banks from Korapay
  */
 export async function listBanks(): Promise<BanksResponse> {
+  if (!isKorapayConfigured()) {
+    console.warn("Korapay not configured, returning empty banks list");
+    return {
+      status: true,
+      message: "Korapay not configured",
+      data: []
+    };
+  }
+
   try {
     const response = await korapayClient.get<BanksResponse>(
       "/merchant/api/v1/misc/banks"

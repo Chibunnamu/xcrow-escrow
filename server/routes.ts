@@ -11,7 +11,7 @@ import { notificationService } from "./email/email_service";
 import { registerPaymentRoutes } from "./routes/payments";
 import { registerWebhookRoutes } from "./routes/webhook";
 import { registerAdminRoutes } from "./routes/admin";
-import { listBanks, verifyAccountNumber } from "./services/korapay";
+import { listBanks, verifyAccountNumber, isKorapayConfigured } from "./services/korapay";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register route modules
@@ -961,6 +961,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       if (!accountNumber || !bankCode) {
         return res.status(400).json({ message: "Account number and bank code are required" });
+      }
+
+      if (!isKorapayConfigured()) {
+        return res.status(503).json({ message: "Bank account verification is currently unavailable. Please try again later." });
       }
 
       const verificationData = await verifyAccountNumber(accountNumber, bankCode);
