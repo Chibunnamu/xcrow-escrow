@@ -1,6 +1,6 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { storage } from "../storage";
-import { verifyWebhook, transferToSeller } from "../services/korapay";
+import { verifyWebhook, initiatePayout } from "../services/korapay";
 import { notificationService } from "../email/email_service";
 
 export function registerWebhookRoutes(app: Express): void {
@@ -236,26 +236,12 @@ async function initiateImmediatePayout(transactionId: string, sellerId: string, 
 
     // Initiate transfer using Korapay
     const transferReference = `PAYOUT-${payout.id}-${Date.now()}`;
-    const transferData = await transferToSeller({
+    const transferData = await initiatePayout({
       amount: baseAmount,
-      currency: "NGN",
+      bankCode: seller.bankCode,
+      accountNumber: seller.accountNumber,
+      name: sellerName,
       reference: transferReference,
-      destination: {
-        type: "bank_account",
-        amount: baseAmount,
-        currency: "NGN",
-        bank_account: {
-          bank: seller.bankCode,
-          account: seller.accountNumber,
-        },
-        customer: {
-          email: seller.email!,
-          name: sellerName,
-        },
-      },
-      metadata: {
-        transactionId,
-      },
     });
 
     // Update payout with transfer details
