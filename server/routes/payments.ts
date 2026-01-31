@@ -158,7 +158,7 @@ export function registerPaymentRoutes(app: Express): void {
     try {
       const { listBanks } = await import("../services/korapay");
       const banksData = await listBanks();
-      res.json(banksData);
+      res.json({ banks: banksData.data });
     } catch (error: any) {
       console.error("Error fetching banks:", error);
       res.status(500).json({
