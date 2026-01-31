@@ -944,6 +944,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const banksData = await listBanks();
       res.json({ banks: banksData.data });
     } catch (error: any) {
+      console.error('Banks API error:', error);
       next(error);
     }
   });
@@ -962,6 +963,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
         accountNumber: verificationData.data.account_number,
       });
     } catch (error: any) {
+      console.error('Account verification error:', error);
+      next(error);
+    }
+  });
+
+  app.post("/api/bank-account", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const user = req.user as User;
+
+      const result = updateBankAccountSchema.safeParse(req.body);
+      if (!result.success) {
+        return res.status(400).json({ message: "Invalid input", errors: result.error.errors });
+      }
+
+      const { bankCode, accountNumber, accountName } = result.data;
+
+      // For Korapay, we don't need to create transfer recipients like Paystack
+      // We just store the bank details directly
+      const updatedUser = await storage.updateUserBankAccount(
+        user.id,
+        bankCode,
+        accountNumber,
+        accountName,
+        null // No recipient code needed for Korapay
+      );
+
+      // Update the session user to reflect the changes
+      req.user = updatedUser;
+
+      const { password, ...userWithoutPassword } = updatedUser!;
+      res.json({ user: userWithoutPassword });
+    } catch (error: any) {
+      console.error('Save bank account error:', error);
       next(error);
     }
   });

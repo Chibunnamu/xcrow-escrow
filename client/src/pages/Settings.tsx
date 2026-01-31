@@ -295,7 +295,7 @@ export const Settings = (): JSX.Element => {
                 <p className="text-sm text-blue-900 font-medium mb-1">How it works</p>
                 <ul className="text-sm text-blue-700 space-y-1">
                   <li>• Select your bank and enter your account number</li>
-                  <li>• Click "Verify Account" to confirm your details with Paystack</li>
+                  <li>• Click "Verify Account" to confirm your details with Korapay</li>
                   <li>• Review the verified account name</li>
                   <li>• Click "Save Bank Account" to complete the setup</li>
                   <li>• Payouts will be automatically sent to this account when transactions complete</li>
