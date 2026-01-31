@@ -11,7 +11,7 @@ import { notificationService } from "./email/email_service";
 import { registerPaymentRoutes } from "./routes/payments";
 import { registerWebhookRoutes } from "./routes/webhook";
 import { registerAdminRoutes } from "./routes/admin";
-import { listBanks, verifyAccountNumber, isKorapayConfigured } from "./services/korapay";
+import { listBanks, resolveAccount } from "./services/korapay";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register route modules
