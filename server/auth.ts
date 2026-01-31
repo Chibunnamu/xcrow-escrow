@@ -17,6 +17,7 @@ declare global {
       bankCode?: string | null;
       accountNumber?: string | null;
       accountName?: string | null;
+      role?: string | null;
     }
   }
 }
@@ -58,7 +59,8 @@ export function setupAuth(app: any) {
         lastName: user.lastName!,
         bankCode: user.bankCode,
         accountNumber: user.accountNumber,
-        accountName: user.accountName
+        accountName: user.accountName,
+        role: (user as any).role
       });
     } catch (error) {
       return done(error);
@@ -98,7 +100,8 @@ export function setupAuth(app: any) {
           lastName: user.lastName!,
           bankCode: user.bankCode,
           accountNumber: user.accountNumber,
-          accountName: user.accountName
+          accountName: user.accountName,
+          role: (user as any).role
         });
       } catch (error) {
         return done(error);
@@ -140,7 +143,8 @@ export function setupAuth(app: any) {
           lastName: user.lastName!,
           bankCode: user.bankCode,
           accountNumber: user.accountNumber,
-          accountName: user.accountName
+          accountName: user.accountName,
+          role: (user as any).role
         });
       } catch (error) {
         return done(error);
@@ -167,7 +171,8 @@ export function setupAuth(app: any) {
         lastName: user.lastName!,
         bankCode: user.bankCode,
         accountNumber: user.accountNumber,
-        accountName: user.accountName
+        accountName: user.accountName,
+        role: (user as any).role
       });
     } catch (error) {
       done(error);

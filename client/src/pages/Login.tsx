@@ -53,8 +53,12 @@ export const Login = (): JSX.Element => {
         description: "Welcome back!",
       });
 
-      // Redirect to dashboard for all users
-      setLocation("/dashboard");
+      // Check if user is admin and redirect accordingly
+      if (data.user?.role === "admin" || data.user?.role === "superAdmin" || data.user?.role === "support") {
+        setLocation("/admin/dashboard");
+      } else {
+        setLocation("/dashboard");
+      }
     },
     onError: (error: any) => {
       let errorMessage = "Login failed. Please try again.";
