@@ -161,10 +161,8 @@ export function registerPaymentRoutes(app: Express): void {
       res.json({ banks: banksData.data });
     } catch (error: any) {
       console.error("Error fetching banks:", error);
-      res.status(500).json({
-        message: "Failed to fetch banks list",
-        error: error.message,
-      });
+      // Return empty array to prevent frontend crash
+      res.status(500).json({ banks: [] });
     }
   });
 }
