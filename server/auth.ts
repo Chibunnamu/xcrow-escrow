@@ -24,11 +24,16 @@ declare global {
 
 export function setupAuth(app: any) {
   // Session middleware (required for Passport)
+  const isProduction = process.env.NODE_ENV === 'production';
   app.use(session({
     secret: process.env.SESSION_SECRET || 'your-secret-key',
     resave: false,
     saveUninitialized: false,
-    cookie: { secure: false } // Set to true in production with HTTPS
+    cookie: {
+      secure: isProduction, // Use secure cookies in production (HTTPS)
+      httpOnly: true, // Prevent XSS attacks
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    }
   }));
 
   // Initialize Passport
