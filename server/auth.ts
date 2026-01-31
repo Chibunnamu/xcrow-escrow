@@ -26,12 +26,12 @@ export function setupAuth(app: any) {
   // Session middleware (required for Passport)
   const isProduction = process.env.NODE_ENV === 'production';
   app.use(session({
-    secret: process.env.SESSION_SECRET || 'your-secret-key',
+    secret: process.env.SESSION_SECRET || 'fallback-secret-key-change-in-production',
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: isProduction, // Use secure cookies in production (HTTPS)
-      httpOnly: true, // Prevent XSS attacks
+      secure: false, // Temporarily disable for debugging - will enable after confirming SESSION_SECRET is set
+      httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
   }));
