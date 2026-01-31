@@ -11,6 +11,7 @@ import { notificationService } from "./email/email_service";
 import { registerPaymentRoutes } from "./routes/payments";
 import { registerWebhookRoutes } from "./routes/webhook";
 import { registerAdminRoutes } from "./routes/admin";
+import { listBanks, verifyAccountNumber } from "./services/korapay";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register route modules
@@ -937,7 +938,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
 
+  // Bank account routes
+  app.get("/api/banks", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const banksData = await listBanks();
+      res.json({ banks: banksData.data });
+    } catch (error: any) {
+      next(error);
+    }
+  });
 
+  app.post("/api/bank-account/verify", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const { accountNumber, bankCode } = req.body;
+
+      if (!accountNumber || !bankCode) {
+        return res.status(400).json({ message: "Account number and bank code are required" });
+      }
+
+      const verificationData = await verifyAccountNumber(accountNumber, bankCode);
+      res.json({
+        accountName: verificationData.data.account_name,
+        accountNumber: verificationData.data.account_number,
+      });
+    } catch (error: any) {
+      next(error);
+    }
+  });
 
   // Payout routes
   app.get("/api/payouts", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {

@@ -103,6 +103,43 @@ export interface TransferResponse {
   };
 }
 
+export interface Bank {
+  name: string;
+  slug: string;
+  code: string;
+  longcode: string;
+  gateway: string;
+  pay_with_bank: boolean;
+  active: boolean;
+  country: string;
+  currency: string;
+  type: string;
+  id: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BanksResponse {
+  status: boolean;
+  message: string;
+  data: Bank[];
+}
+
+export interface AccountVerificationParams {
+  account_number: string;
+  bank_code: string;
+}
+
+export interface AccountVerificationResponse {
+  status: boolean;
+  message: string;
+  data: {
+    account_number: string;
+    account_name: string;
+    bank_code: string;
+  };
+}
+
 export interface WebhookEvent {
   event: string;
   data: {
@@ -229,4 +266,41 @@ export function calculateNetPayoutAmount(baseAmount: number): number {
   // For immediate payouts, we send the full baseAmount to seller
   // Korapay transfer fees are deducted from platform's service fee
   return baseAmount;
+}
+
+/**
+ * Get list of supported banks from Korapay
+ */
+export async function listBanks(): Promise<BanksResponse> {
+  try {
+    const response = await korapayClient.get<BanksResponse>(
+      "/merchant/api/v1/misc/banks"
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error("Korapay list banks error:", error.response?.data || error.message);
+    throw new Error(
+      error.response?.data?.message || "Failed to fetch banks list"
+    );
+  }
+}
+
+/**
+ * Verify bank account details using Korapay
+ */
+export async function verifyAccountNumber(
+  accountNumber: string,
+  bankCode: string
+): Promise<AccountVerificationResponse> {
+  try {
+    const response = await korapayClient.get<AccountVerificationResponse>(
+      `/merchant/api/v1/misc/banks/resolve?account_number=${accountNumber}&bank_code=${bankCode}`
+    );
+    return response.data;
+  } catch (error: any) {
+    console.error("Korapay account verification error:", error.response?.data || error.message);
+    throw new Error(
+      error.response?.data?.message || "Failed to verify account"
+    );
+  }
 }
