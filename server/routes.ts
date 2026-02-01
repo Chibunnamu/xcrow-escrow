@@ -334,9 +334,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/transactions/buyer", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = req.user as User;
-      if (!user) {
-        return res.status(401).json({ transactions: [] });
-      }
       const { db } = await import("./firebase");
       const querySnapshot = await db.collection("transactions")
         .where("buyerId", "==", user.id)
