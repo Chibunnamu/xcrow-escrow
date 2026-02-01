@@ -6,12 +6,28 @@ import { setupReplitAuth } from "./replitAuth";
 import passport from "passport";
 import { insertUserSchema, insertTransactionSchema, updateTransactionStatusSchema, insertDisputeSchema, updateDisputeStatusSchema, insertNotificationSchema, type User } from "@shared/schema";
 import { randomBytes } from "crypto";
+import { z } from "zod";
 
 import { notificationService } from "./email/email_service";
 import { registerPaymentRoutes } from "./routes/payments";
 import { registerWebhookRoutes } from "./routes/webhook";
 import { registerAdminRoutes } from "./routes/admin";
 import { listBanks, resolveAccount } from "./services/korapay";
+
+// Helper functions for Korapay
+const isKorapayConfigured = () => {
+  return !!process.env.KORAPAY_SECRET_KEY;
+};
+
+const verifyAccountNumber = async (accountNumber: string, bankCode: string) => {
+  return await resolveAccount(bankCode, accountNumber);
+};
+
+const updateBankAccountSchema = z.object({
+  bankCode: z.string(),
+  accountNumber: z.string(),
+  accountName: z.string(),
+});
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Register route modules
