@@ -178,7 +178,7 @@ export const Settings = (): JSX.Element => {
                       <SelectValue placeholder="Choose your bank" />
                     </SelectTrigger>
                     <SelectContent>
-                      {banksData?.banks.map((bank) => (
+                      {(banksData?.banks || []).map((bank) => (
                         <SelectItem key={bank.code} value={bank.code}>
                           {bank.name}
                         </SelectItem>
