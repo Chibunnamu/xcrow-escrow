@@ -334,10 +334,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get("/api/transactions/buyer", isAuthenticated, async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = req.user as User;
-      const transactions = await storage.getTransactionsByBuyer(user.id);
+      const { db } = await import("./firebase");
+      const querySnapshot = await db.collection("transactions")
+        .where("buyerId", "==", user.id)
+        .get();
+      const transactions = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       res.json({ transactions });
     } catch (error) {
-      next(error);
+      console.error('Error fetching buyer transactions:', error);
+      res.json({ transactions: [] });
     }
   });
 
