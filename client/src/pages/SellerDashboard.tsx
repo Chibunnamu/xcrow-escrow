@@ -49,10 +49,12 @@ export const SellerDashboard = (): JSX.Element => {
     enabled: !!userData?.user,
   });
 
-  const { data: purchases, isLoading: purchasesLoading } = useQuery<Transaction[]>({
+  const { data: purchasesData, isLoading: purchasesLoading } = useQuery<{ transactions: Transaction[] }>({
     queryKey: ["/api/transactions/buyer"],
     enabled: !!userData?.user,
   });
+
+  const purchases = Array.isArray(purchasesData?.transactions) ? purchasesData.transactions : [];
 
   type PayoutWithTransaction = Payout & { transaction: Transaction };
 
