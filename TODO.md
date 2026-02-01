@@ -12,3 +12,5 @@
 ## Testing
 - [x] Test backend endpoint returns correct shape
 - [x] Verify frontend handles responses safely
+"## Additional Fixes"  
+"- [x] Remove redundant user check in /api/transactions/buyer route that was causing potential issues" 
