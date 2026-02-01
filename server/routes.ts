@@ -967,7 +967,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ banks });
     } catch (error: any) {
       console.error('Banks API error:', error);
-      next(error);
+      res.json({ banks: [] });
     }
   });
 
