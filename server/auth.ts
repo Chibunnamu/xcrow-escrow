@@ -18,20 +18,53 @@ declare global {
       accountNumber?: string | null;
       accountName?: string | null;
       role?: string | null;
+      bankAccounts?: {
+        paystack?: { bankCode: string; accountNumber: string; accountName: string; recipientCode?: string };
+        korapay?: { bankCode: string; accountNumber: string; accountName: string; beneficiaryId?: string };
+      };
     }
   }
+}
+
+// Helper to extract bank details from new nested structure or fallback to flat (backward compat)
+function getBankDetailsFromUser(user: any) {
+  // Try new nested structure first
+  if (user.bankAccounts?.paystack) {
+    return {
+      bankCode: user.bankAccounts.paystack.bankCode,
+      accountNumber: user.bankAccounts.paystack.accountNumber,
+      accountName: user.bankAccounts.paystack.accountName
+    };
+  }
+  // Fallback to old flat structure for backward compatibility
+  return {
+    bankCode: user.bankCode || undefined,
+    accountNumber: user.accountNumber || undefined,
+    accountName: user.accountName || undefined
+  };
 }
 
 export function setupAuth(app: any) {
   // Session middleware (required for Passport)
   const isProduction = process.env.NODE_ENV === 'production';
+  
+  // Determine if we're running behind a secure connection (HTTPS)
+  // This is important for cookie settings in production
+  const cookieSecure = isProduction || process.env.REPLIT_DEPLOYMENT === 'true';
+  
+  // For cross-origin cookies (when frontend is on Firebase and backend is on Render/Replit),
+  // we need to use sameSite: 'none' with secure: true
+  // For same-origin (when frontend and backend are on same domain), 'lax' is fine
+  const cookieSameSite = isProduction ? 'none' : 'lax';
+  
   app.use(session({
     secret: process.env.SESSION_SECRET || 'fallback-secret-key-change-in-production',
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // Temporarily disable for debugging - will enable after confirming SESSION_SECRET is set
+      secure: cookieSecure, // Enable secure cookies in production
       httpOnly: true,
+      sameSite: cookieSameSite, // Use 'none' for cross-origin in production, 'lax' for same-origin in development
       maxAge: 24 * 60 * 60 * 1000 // 24 hours
     }
   }));
@@ -57,15 +90,17 @@ export function setupAuth(app: any) {
         return done(null, false, { message: 'Invalid password' });
       }
 
+      const bankDetails = getBankDetailsFromUser(user);
       return done(null, {
         id: user.id,
         email: user.email!,
         firstName: user.firstName!,
         lastName: user.lastName!,
-        bankCode: user.bankCode,
-        accountNumber: user.accountNumber,
-        accountName: user.accountName,
-        role: (user as any).role
+        bankCode: bankDetails.bankCode,
+        accountNumber: bankDetails.accountNumber,
+        accountName: bankDetails.accountName,
+        role: (user as any).role,
+        bankAccounts: (user as any).bankAccounts
       });
     } catch (error) {
       return done(error);
@@ -77,7 +112,7 @@ export function setupAuth(app: any) {
     passport.use(new GoogleStrategy({
       clientID: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: '/auth/google/callback'
+      callbackURL: '/api/auth/google/callback'
     }, async (accessToken, refreshToken, profile, done) => {
       try {
         const email = profile.emails?.[0]?.value;
@@ -169,15 +204,17 @@ export function setupAuth(app: any) {
       if (!user) {
         return done(null, false);
       }
+      const bankDetails = getBankDetailsFromUser(user);
       done(null, {
         id: user.id,
         email: user.email!,
         firstName: user.firstName!,
         lastName: user.lastName!,
-        bankCode: user.bankCode,
-        accountNumber: user.accountNumber,
-        accountName: user.accountName,
-        role: (user as any).role
+        bankCode: bankDetails.bankCode,
+        accountNumber: bankDetails.accountNumber,
+        accountName: bankDetails.accountName,
+        role: (user as any).role,
+        bankAccounts: (user as any).bankAccounts
       });
     } catch (error) {
       done(error);
