@@ -1,7 +1,6 @@
 const functions = require('firebase-functions');
 const express = require('express');
 const cors = require('cors');
-const morgan = require('morgan');
 
 // Initialize Firebase Admin
 const admin = require('firebase-admin');
@@ -13,7 +12,7 @@ const db = admin.firestore();
 // Create Express app
 const app = express();
 
-// CORS configuration - allow all origins since we're on Firebase
+// CORS configuration - allow all origins in production since we're on Firebase
 app.use(cors({
   origin: true,
   credentials: true
@@ -21,30 +20,33 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
-app.use(morgan('dev'));
 
-// Session middleware (simplified for Cloud Functions)
-// We'll use Firebase session cookies instead of express-session
-app.use(async (req, res, next) => {
-  // Get the session cookie from the request
-  const sessionCookie = req.headers.authorization?.replace('Bearer ', '') || 
-                       req.cookies?.session;
-
-  if (sessionCookie) {
-    try {
-      // Verify the session cookie
-      const decodedClaims = await admin.auth().verifySessionCookie(sessionCookie, true);
-      req.user = {
-        id: decodedClaims.uid,
-        email: decodedClaims.email
-      };
-    } catch (error) {
-      // Invalid session, continue without user
-      console.log('Session verification failed:', error.message);
-    }
+// Middleware to verify Firebase session cookie
+const authenticateUser = async (req, res, next) => {
+  const sessionCookie = req.cookies?.session || req.headers.authorization?.replace('Bearer ', '');
+  
+  if (!sessionCookie) {
+    req.user = null;
+    return next();
   }
+  
+  try {
+    // Verify the session cookie
+    const decodedClaims = await admin.auth().verifySessionCookie(sessionCookie, true);
+    req.user = {
+      id: decodedClaims.uid,
+      email: decodedClaims.email,
+      role: decodedClaims.role
+    };
+  } catch (error) {
+    console.log('Session verification failed:', error.message);
+    req.user = null;
+  }
+  
   next();
-});
+};
+
+app.use(authenticateUser);
 
 // Health check endpoint
 app.get('/', (req, res) => {
@@ -55,19 +57,96 @@ app.get('/', (req, res) => {
 app.post('/api/login', async (req, res) => {
   const { email, password } = req.body;
   
+  if (!email || !password) {
+    return res.status(400).json({ message: 'Email and password are required' });
+  }
+  
   try {
-    // For demo purposes, create a custom token
-    // In production, you would verify against your database
-    const customToken = await admin.auth().createCustomToken(email);
-    res.json({ token: customToken, email });
+    // For now, try to find user in Firestore
+    // In production, you'd verify the password against your database
+    const usersRef = db.collection('users');
+    const snapshot = await usersRef.where('email', '==', email).limit(1).get();
+    
+    let user;
+    if (!snapshot.empty) {
+      const userDoc = snapshot.docs[0];
+      const userData = userDoc.data();
+      
+      // Check if user has a password hash
+      if (userData.passwordHash) {
+        const bcrypt = require('bcryptjs');
+        const isValid = await bcrypt.compare(password, userData.passwordHash);
+        if (!isValid) {
+          return res.status(401).json({ message: 'Invalid email or password' });
+        }
+        user = { id: userDoc.id, ...userData };
+      } else {
+        // No password - user might be OAuth user
+        // For demo purposes, we'll create a custom token anyway
+        user = { id: userDoc.id, ...userData };
+      }
+    } else {
+      // User doesn't exist - for demo, create a new user
+      // In production, you'd return an error
+      const userData = {
+        email,
+        firstName: email.split('@')[0],
+        lastName: '',
+        createdAt: admin.firestore.FieldValue.serverTimestamp(),
+        role: 'user'
+      };
+      
+      const docRef = await usersRef.add(userData);
+      user = { id: docRef.id, ...userData };
+    }
+    
+    // Create custom token
+    const customToken = await admin.auth().createCustomToken(user.id, {
+      email: user.email,
+      role: user.role
+    });
+    
+    // Set session cookie
+    res.cookie('session', customToken, {
+      maxAge: 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      secure: true,
+      sameSite: 'none'
+    });
+    
+    return res.json({ 
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role
+      }
+    });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: error.message });
+    return res.status(500).json({ message: error.message });
   }
 });
 
 app.post('/api/logout', (req, res) => {
+  res.clearCookie('session');
   res.json({ message: 'Logged out successfully' });
+});
+
+// Check authentication status
+app.get('/api/auth/status', (req, res) => {
+  if (req.user) {
+    return res.json({ 
+      authenticated: true,
+      user: {
+        id: req.user.id,
+        email: req.user.email,
+        role: req.user.role
+      }
+    });
+  }
+  return res.json({ authenticated: false });
 });
 
 // User routes
@@ -88,6 +167,23 @@ app.get('/api/user', async (req, res) => {
   }
 });
 
+app.patch('/api/user', async (req, res) => {
+  if (!req.user) {
+    return res.status(401).json({ message: 'Unauthorized' });
+  }
+  
+  try {
+    await db.collection('users').doc(req.user.id).update({
+      ...req.body,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    res.json({ message: 'User updated successfully' });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Transactions routes
 app.get('/api/transactions', async (req, res) => {
   if (!req.user) {
@@ -95,15 +191,28 @@ app.get('/api/transactions', async (req, res) => {
   }
   
   try {
-    const transactionsSnapshot = await db.collection('transactions')
+    // Get transactions where user is buyer or seller
+    const buyerSnapshot = await db.collection('transactions')
       .where('buyerId', '==', req.user.id)
       .orderBy('createdAt', 'desc')
       .get();
     
-    const transactions = transactionsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    const sellerSnapshot = await db.collection('transactions')
+      .where('sellerId', '==', req.user.id)
+      .orderBy('createdAt', 'desc')
+      .get();
+    
+    const transactions = [
+      ...buyerSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })),
+      ...sellerSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }))
+    ];
+    
+    // Sort by createdAt
+    transactions.sort((a, b) => {
+      const aTime = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+      const bTime = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+      return bTime - aTime;
+    });
     
     res.json({ transactions });
   } catch (error) {
@@ -143,7 +252,14 @@ app.get('/api/transactions/:id', async (req, res) => {
     if (!doc.exists) {
       return res.status(404).json({ message: 'Transaction not found' });
     }
-    res.json({ id: doc.id, ...doc.data() });
+    const data = doc.data();
+    // Check if user is buyer, seller, or admin
+    if (data.buyerId !== req.user.id && 
+        data.sellerId !== req.user.id && 
+        req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    res.json({ id: doc.id, ...data });
   } catch (error) {
     console.error('Error fetching transaction:', error);
     res.status(500).json({ message: error.message });
@@ -156,6 +272,19 @@ app.patch('/api/transactions/:id', async (req, res) => {
   }
   
   try {
+    const doc = await db.collection('transactions').doc(req.params.id).get();
+    if (!doc.exists) {
+      return res.status(404).json({ message: 'Transaction not found' });
+    }
+    
+    const data = doc.data();
+    // Check if user is buyer, seller, or admin
+    if (data.buyerId !== req.user.id && 
+        data.sellerId !== req.user.id && 
+        req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'Access denied' });
+    }
+    
     await db.collection('transactions').doc(req.params.id).update({
       ...req.body,
       updatedAt: admin.firestore.FieldValue.serverTimestamp()
@@ -169,8 +298,8 @@ app.patch('/api/transactions/:id', async (req, res) => {
 
 // Admin routes
 app.get('/api/admin/transactions', async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' });
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin access required' });
   }
   
   try {
@@ -191,8 +320,8 @@ app.get('/api/admin/transactions', async (req, res) => {
 });
 
 app.get('/api/admin/users', async (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ message: 'Unauthorized' });
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin access required' });
   }
   
   try {
@@ -209,14 +338,28 @@ app.get('/api/admin/users', async (req, res) => {
   }
 });
 
+app.patch('/api/admin/users/:id', async (req, res) => {
+  if (!req.user || req.user.role !== 'admin') {
+    return res.status(403).json({ message: 'Admin access required' });
+  }
+  
+  try {
+    await db.collection('users').doc(req.params.id).update({
+      ...req.body,
+      updatedAt: admin.firestore.FieldValue.serverTimestamp()
+    });
+    res.json({ message: 'User updated successfully' });
+  } catch (error) {
+    console.error('Error updating user:', error);
+    res.status(500).json({ message: error.message });
+  }
+});
+
 // Webhook endpoint (for payment gateways)
 app.post('/api/webhook', async (req, res) => {
   try {
     const webhookData = req.body;
     console.log('Webhook received:', webhookData);
-    
-    // Process webhook based on gateway
-    // This is a simplified version - you'd need to add actual payment gateway logic
     
     res.json({ received: true });
   } catch (error) {
@@ -227,74 +370,3 @@ app.post('/api/webhook', async (req, res) => {
 
 // Export the API as a Cloud Function
 exports.api = functions.https.onRequest(app);
-
-// Also export individual functions for specific endpoints
-exports.login = functions.https.onCall(async (data, context) => {
-  const { email, password } = data;
-  
-  try {
-    // Create custom token
-    const customToken = await admin.auth().createCustomToken(email);
-    return { token: customToken, email };
-  } catch (error) {
-    throw new functions.https.HttpsError('internal', error.message);
-  }
-});
-
-exports.getUser = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
-  }
-  
-  try {
-    const userDoc = await db.collection('users').doc(context.auth.uid).get();
-    if (!userDoc.exists) {
-      // Create user if doesn't exist
-      await db.collection('users').doc(context.auth.uid).set({
-        email: context.auth.token.email,
-        createdAt: admin.firestore.FieldValue.serverTimestamp()
-      });
-      return { id: context.auth.uid, email: context.auth.token.email };
-    }
-    return { id: userDoc.id, ...userDoc.data() };
-  } catch (error) {
-    throw new functions.https.HttpsError('internal', error.message);
-  }
-});
-
-exports.getTransactions = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
-  }
-  
-  try {
-    const transactionsSnapshot = await db.collection('transactions')
-      .where('buyerId', '==', context.auth.uid)
-      .orderBy('createdAt', 'desc')
-      .get();
-    
-    return transactionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  } catch (error) {
-    throw new functions.https.HttpsError('internal', error.message);
-  }
-});
-
-exports.createTransaction = functions.https.onCall(async (data, context) => {
-  if (!context.auth) {
-    throw new functions.https.HttpsError('unauthenticated', 'User must be authenticated');
-  }
-  
-  try {
-    const transactionData = {
-      ...data,
-      buyerId: context.auth.uid,
-      createdAt: admin.firestore.FieldValue.serverTimestamp(),
-      status: 'pending'
-    };
-    
-    const docRef = await db.collection('transactions').add(transactionData);
-    return { id: docRef.id, ...transactionData };
-  } catch (error) {
-    throw new functions.https.HttpsError('internal', error.message);
-  }
-});
