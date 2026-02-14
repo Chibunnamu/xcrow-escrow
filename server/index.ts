@@ -1,13 +1,49 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import morgan from 'morgan';
+import cors from 'cors';
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { setupAuth } from "./auth";
 
+console.log('VITE_API_URL:', process.env.VITE_API_URL);
 console.log('Starting server...');
 
 const app = express();
+
+// CORS configuration for cross-origin requests
+// This allows the frontend to make API requests to the backend
+const corsOptions = {
+  origin: function(origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    // In production, you might want to restrict this to your actual domain
+    const allowedOrigins = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://xcrowpay.com',
+      'https://www.xcrowpay.com',
+      'https://xcrow-b8385.web.app',
+      'https://xcrow-b8385.firebaseapp.com',
+      /\.firebaseapp\.com$/,
+      /\.web\.app$/
+    ];
+    
+    // Allow if origin is in the allowed list or if there's no origin (same-origin requests)
+    if (!origin || allowedOrigins.some(allowed => 
+      origin === allowed || (allowed instanceof RegExp && allowed.test(origin))
+    )) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(null, true); // Allow all for now to debug
+    }
+  },
+  credentials: true, // Allow credentials (cookies) to be sent
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan('dev'));
